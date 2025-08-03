@@ -1,0 +1,209 @@
+# Defines the data models for the LegalTech Predictor application.
+# This schema is the single source of truth for all data structures,
+# derived from the master JSON schema and refined through case law analysis.
+
+# -------------------
+# ENUMS
+# -------------------
+
+"""The legal jurisdiction of the decision."""
+enum Jurisdiction {
+  UKIPO
+  EUIPO
+}
+
+"""The type of a trademark."""
+enum MarkType {
+  WORD
+  FIGURATIVE
+  WORD_AND_DEVICE
+  THREE_DIMENSIONAL
+}
+
+"""The outcome of a proof of use assessment."""
+enum ProofOfUseOutcome {
+  use_proven
+  use_not_proven
+}
+
+"""The degree of similarity between goods and services."""
+enum SimilarityDegree {
+  identical
+  high_degree
+  medium_degree
+  low_degree
+  dissimilar
+}
+
+"""The degree of similarity between trademarks."""
+enum MarkSimilarityDegree {
+  high_degree
+  medium_degree
+  low_degree
+  dissimilar
+}
+
+"""The degree of conceptual similarity between trademarks."""
+enum ConceptualSimilarityDegree {
+  high_degree
+  medium_degree
+  low_degree
+  dissimilar
+  neutral
+}
+
+"""The inherent distinctive character of the earlier mark."""
+enum DistinctiveCharacter {
+  very_high_degree
+  high_degree
+  medium_degree
+  low_degree
+}
+
+"""The level of attention of the average consumer."""
+enum AverageConsumerAttention {
+  high
+  medium
+  low
+}
+
+"""The type of confusion found between marks."""
+enum ConfusionType {
+  direct
+  indirect
+  both
+}
+
+"""The final outcome of the opposition case."""
+enum OppositionOutcome {
+  successful
+  partially_successful
+  unsuccessful
+}
+
+"""Other legal grounds for opposition."""
+enum OtherGrounds {
+  G_5_3 # Represents "5(3)"
+  G_5_4_a # Represents "5(4)(a)"
+}
+
+
+# -------------------
+# DATA MODELS (Firestore Collections)
+# -------------------
+
+"""
+A structured representation of a trademark opposition case decision.
+This is the main document stored in the 'cases' collection.
+"""
+type Case @table(name: "cases", key: "id") {
+  id: String! @col(name: "case_reference")
+  decision_date: Date!
+  decision_maker: String!
+  jurisdiction: Jurisdiction!
+  application_number: String!
+  applicant_name: String!
+  opponent_name: String!
+  applicant_marks: [ApplicantMark!]!
+  opponent_marks: [OpponentMark!]!
+  grounds_for_opposition: [String!]!
+  proof_of_use_requested: Boolean!
+  proof_of_use_outcome: ProofOfUseOutcome
+  goods_services_comparison: [GoodsServicesComparison!]!
+  mark_comparison: MarkComparison!
+  distinctive_character: DistinctiveCharacter!
+  average_consumer_attention: AverageConsumerAttention!
+  likelihood_of_confusion: Boolean!
+  confusion_type: ConfusionType
+  opposition_outcome: OppositionOutcome!
+  other_grounds: [OtherGrounds!]
+  decision_rationale: DecisionRationale!
+  global_assessment_notes: String
+  # One-to-many relationship to the Chunks sub-collection
+  chunks: [Chunk!]! @relation(collection: "chunks", field: "case", reference: "id")
+}
+
+"""
+Represents a text chunk from a case PDF, used for vector search.
+Stored in the 'chunks' sub-collection within a Case document.
+"""
+type Chunk @table(name: "chunks") {
+  # Data Connect will auto-generate an ID if not specified
+  case: Case! @col(name: "case_reference") # Foreign key back to the parent Case
+  source_section: String!
+  page_number: Int!
+  chunk_sequence_id: Int!
+  text: String!
+  embedding: [Float!]! @col(type: "vector", dimensions: 3072)
+}
+
+
+# -------------------
+# EMBEDDED OBJECTS (Not separate collections)
+# -------------------
+
+"""
+A mark the applicant is trying to register.
+"""
+type ApplicantMark {
+  mark: String!
+  mark_type: MarkType!
+  goods_services: [GoodsServices!]!
+}
+
+"""
+An earlier mark the opponent is relying on.
+"""
+type OpponentMark {
+  mark: String!
+  mark_type: MarkType!
+  registration_number: String!
+  filing_date: Date!
+  registration_date: Date
+  priority_date: Date
+  goods_services_classes: [Int!]!
+  goods_services_terms: [String!]!
+}
+
+"""
+Represents the goods and services for a specific class.
+"""
+type GoodsServices {
+  class: Int!
+  terms: [String!]!
+}
+
+"""
+Comparison between a specific applicant and opponent G&S term.
+"""
+type GoodsServicesComparison {
+  applicant_term: String!
+  opponent_term: String!
+  similarity: SimilarityDegree!
+}
+
+"""
+Comparison of the marks on visual, aural, and conceptual levels.
+"""
+type MarkComparison {
+  visual_similarity: MarkSimilarityDegree!
+  aural_similarity: MarkSimilarityDegree!
+  conceptual_similarity: ConceptualSimilarityDegree!
+  dominant_component: String
+}
+
+"""
+Rationale behind the decision, including key factors and cited precedents.
+"""
+type DecisionRationale {
+  key_factors: [String!]!
+  precedents_cited: [Precedent!]
+}
+
+"""
+A precedent case cited in the decision.
+"""
+type Precedent {
+  case_name: String!
+  case_reference: String!
+}

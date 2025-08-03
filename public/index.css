@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;500;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* In Tailwind CSS v4, we need to use direct CSS instead of @apply for better compatibility */
+@layer base {
+  body {
+    font-family: 'Open Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Merriweather', serif;
+    font-weight: 700;
+    color: #0A2A4D; /* brand-primary */
+  }
+  
+  h1 {
+    font-size: 2.25rem; /* text-4xl */
+    margin-bottom: 1.5rem; /* mb-6 */
+  }
+  
+  @media (min-width: 1024px) {
+    h1 {
+      font-size: 3rem; /* lg:text-5xl */
+    }
+  }
+  
+  h2 {
+    font-size: 1.875rem; /* text-3xl */
+    margin-bottom: 1rem; /* mb-4 */
+  }
+  
+  @media (min-width: 1024px) {
+    h2 {
+      font-size: 2.25rem; /* lg:text-4xl */
+    }
+  }
+  
+  h3 {
+    font-size: 1.5rem; /* text-2xl */
+    margin-bottom: 0.75rem; /* mb-3 */
+  }
+  
+  @media (min-width: 1024px) {
+    h3 {
+      font-size: 1.875rem; /* lg:text-3xl */
+    }
+  }
+  
+  h4 {
+    font-size: 1.25rem; /* text-xl */
+    margin-bottom: 0.5rem; /* mb-2 */
+  }
+  
+  @media (min-width: 1024px) {
+    h4 {
+      font-size: 1.5rem; /* lg:text-2xl */
+    }
+  }
+  
+  p {
+    color: #111827; /* brand-text-primary */
+    margin-bottom: 1rem; /* mb-4 */
+  }
+  
+  a {
+    color: #0A2A4D; /* brand-primary */
+    transition-property: color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  a:hover {
+    color: #D4AF37; /* brand-accent */
+  }
+}
+
+@layer components {
+  .btn {
+    padding-left: 1rem; /* px-4 */
+    padding-right: 1rem;
+    padding-top: 0.5rem; /* py-2 */
+    padding-bottom: 0.5rem;
+    border-radius: 0.375rem; /* rounded */
+    font-weight: 500; /* font-medium */
+  }
+  
+  .btn-primary {
+    background-color: #0A2A4D; /* bg-brand-primary */
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    opacity: 0.9; /* hover:bg-opacity-90 */
+  }
+  
+  .btn-secondary {
+    background-color: #F0F4F8; /* bg-brand-secondary */
+    color: #0A2A4D; /* text-brand-primary */
+  }
+  
+  .btn-secondary:hover {
+    opacity: 0.9; /* hover:bg-opacity-90 */
+  }
+  
+  .btn-accent {
+    background-color: #D4AF37; /* bg-brand-accent */
+    color: white;
+  }
+  
+  .btn-accent:hover {
+    opacity: 0.9; /* hover:bg-opacity-90 */
+  }
+  
+  .card-trademark {
+    border-radius: 0.625rem; /* rounded-lg */
+    border-width: 1px; /* border */
+    padding: 1.5rem; /* p-6 */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  }
+  
+  .badge-status {
+    display: inline-flex; /* inline-flex */
+    align-items: center; /* items-center */
+    border-radius: 9999px; /* rounded-full */
+    padding-left: 0.625rem; /* px-2.5 */
+    padding-right: 0.625rem;
+    padding-top: 0.125rem; /* py-0.5 */
+    padding-bottom: 0.125rem;
+    font-size: 0.75rem; /* text-xs */
+    font-weight: 500; /* font-medium */
+  }
+  
+  .badge-status-pending {
+    background-color: #F59E0B; /* bg-brand-warning */
+    background-opacity: 0.2; /* bg-opacity-20 */
+    color: #F59E0B; /* text-brand-warning */
+  }
+  
+  .badge-status-approved {
+    background-color: #10B981; /* bg-brand-success */
+    background-opacity: 0.2; /* bg-opacity-20 */
+    color: #10B981; /* text-brand-success */
+  }
+  
+  .badge-status-rejected {
+    background-color: #EF4444; /* bg-brand-error */
+    background-opacity: 0.2; /* bg-opacity-20 */
+    color: #EF4444; /* text-brand-error */
+  }
+}

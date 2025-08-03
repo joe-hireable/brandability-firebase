@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "brandability"
+location: "europe-west2"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "trademark_ai"
+      cloudSql:
+        instanceId: "trademark-db"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
