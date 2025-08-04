@@ -1,0 +1,109 @@
+<output_guidelines>
+  <reasoning_methodology>
+    # Trademark Opposition Decision Data Extraction Methodology
+
+    This document outlines the step-by-step process for extracting data from UK Intellectual Property Office (UKIPO) and EU Intellectual Property Office (EUIPO) trademark opposition decisions, focusing on Section 5(2)(b) cases.  The goal is to populate the predefined JSON schema (provided separately) accurately and completely.  **Always adhere strictly to the field names, data types, and `enum` values defined in the schema.**
+
+    ## 1. Initial Document Review and Setup
+
+    *   **Identify Key Sections:** Scan the entire document to locate these standard sections:
+        *   **Background and Pleadings:**  Contains case overview, parties, initial claims.
+        *   **Evidence:** Lists evidence submitted by each party.
+        *   **Proof of Use (if applicable):**  Assessment of whether genuine use was demonstrated.
+        *   **Comparison of Goods and Services:** Detailed comparison of the contested goods/services.
+        *   **Comparison of the Trade Marks:** Analysis of visual, aural, and conceptual similarity.
+        *   **Distinctive Character of the Earlier Mark:** Assessment of the earlier mark's distinctiveness.
+        *   **Average Consumer and the Nature of the Purchasing Act:** Description of the typical consumer and purchasing process.
+        *   **Likelihood of Confusion:**  The Hearing Officer's analysis and conclusion on confusion.
+        *   **Decision/Conclusion/Outcome:** The final decision on the opposition.
+    *   **Note Paragraph Numbers:**  Keep track of paragraph numbers for key findings and statements. This will be important for the `analysis_notes`.
+
+    ## 2. Sequential Data Extraction
+
+    **First Pass (Basic Case Information):**
+    *   Extract `case_reference`, `decision_maker`, and `jurisdiction`. Find these in the document header and conclusion.
+    *   Extract `application_number` from the "IN THE MATTER OF" section.
+    *   Extract `applicant_name` and `opponent_name`.
+
+    **Second Pass (Mark and Goods/Services Details):**
+      *   **Applicant Marks:**
+          *   Locate the "applicant's mark" description (usually near the beginning).
+          *   Populate the `applicant_marks` array. Extract each mark *verbatim* as a string.
+          *   Determine `applicant_mark_is_figurative` (True/False).
+          *  Extract class numbers into `applicant_classes`.
+          *   Extract the listed goods/services, grouping terms by `class` (integer) and providing each `term` (verbatim) within an array in `goods_services`.
+
+      *   **Opponent Marks:**
+          *   Locate the "opponent's marks" section (often in "Background and Pleadings").
+          *   Populate the `opponent_marks` array. For *each* opponent mark:
+            *   Extract `mark` (verbatim).
+            *   Extract `mark_is_figurative` (True/False).
+            *   Extract `registration_number`, `filing_date`, `registration_date` (nullable), and `priority_date` (nullable).
+             *  Extract class numbers into `goods_services_classes`.
+            *   Extract the listed goods/services verbatim, separated by commas into `goods_services_terms`.
+
+      *   **Grounds and Proof of Use:**
+          *   Extract `grounds_for_opposition` (e.g., ["5(2)(b)"]).
+          *   Extract `proof_of_use_requested` (True/False).
+          *   If proof of use was requested, extract `proof_of_use_outcome` using the `enum` values ("use_proven", "use_not_proven"). If not applicable use null.
+
+    **Third Pass (Comparative Analysis):**
+      *   **Goods/Services Comparison:**
+          *   Locate "Comparison of goods" or "Comparison of goods and services".
+          *   Populate the `goods_services_comparison` array.  For *each* compared pair:
+              *   Extract `applicant_term` *verbatim*.
+              *   Extract `opponent_term` *verbatim*.
+              *   Extract `similarity` *as stated by the Hearing Officer*, using the `enum` values: `"identical"`, `"high degree"`, `"medium degree"`, `"low degree"`, `"dissimilar"`.
+
+      *   **Mark Comparison:**
+        *   Locate the "Comparison of marks" section.
+        *   Populate the `mark_comparison` object:
+            *   `visual_similarity`: Extract, using the provided `enum` values.
+            *   `aural_similarity`: Extract, using the provided `enum` values.
+            *   `conceptual_similarity`: Extract, using the provided `enum` values.
+
+    **Fourth Pass (Decision and Rationale):**
+     * Locate the section average consumer and the nature of the purchasing act.
+        * Extract distinctive_character and average_consumer_attention using the provided enums.
+    *   **Likelihood of Confusion:**
+        *   Locate the "Likelihood of confusion" and "Decision"/"Conclusion" sections.
+        *  Set confusion to `true` or `false`.
+        *   Populate `confusion_type` as either null (for whenever no likelihood of confusion is found by the Hearing Officer), direct, indirect or both.
+      *   **Opposition Outcome:**
+        *   Extract `opposition_outcome` using provided `enum` values.
+      *   **Other Grounds:**
+        *    Populate the `other_grounds`, array using provided enums, if applicable.
+        *   **Decision Rationale:**
+          *   Populate the `decision_rationale` object.
+          *   Extract `key_factors`: List up to 5 *key factors*, using concise phrases from the text.
+          *   Extract `precedents_cited` (Case Name, Case Reference). DO NOT include precedents from outside the UKIPO, i.e. case reference should conform to the schema pattern to verify.
+
+    **Fifth Pass (Overall Review and Consistency Check):**
+     * Review *all* extracted data for completeness and accuracy.
+     *   Double-check all `enum` values.
+     *   Cross-reference information from different sections.
+
+  </reasoning_methodology>
+
+  <extraction_rules>
+    - Use the provided `enum` values *exactly* as they appear in the schema. Do not create new enum values.
+    - If information for a required field is not explicitly stated, leave that specific sub-field *empty*.
+    - Prioritise explicit statements from the Hearing Officer/Judge.
+    - Be as concise as possible when filling in the key_factors for the decision_rationale.
+    - Do *not* perform your own legal analysis.  Extract only the findings and statements made in the decision.
+    - Adhere *strictly* to the JSON schema structure and data types provided in response_schema.
+  </extraction_rules>
+
+  <few_shot_examples>
+
+  </few_shot_examples>
+
+<task>
+**Task:**  
+Process the attached case document and extract data into a JSON object that conforms to the predefined JSON schema (provided in "response_schema").  Follow the Reasoning Methodology and Extraction Rules precisely. Only return the JSON data.
+
+## **Case Text Provided:**
+<case>
+"<${document}>"
+</case>
+</task>

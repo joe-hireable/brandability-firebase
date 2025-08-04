@@ -24,6 +24,7 @@ enum MarkType {
 enum ProofOfUseOutcome {
   use_proven
   use_not_proven
+  not_applicable
 }
 
 """The degree of similarity between goods and services."""
@@ -35,16 +36,11 @@ enum SimilarityDegree {
   dissimilar
 }
 
-"""The degree of similarity between trademarks."""
-enum MarkSimilarityDegree {
-  high_degree
-  medium_degree
-  low_degree
-  dissimilar
-}
+# Removed redundant MarkSimilarityDegree enum since we're using SimilarityDegree consistently
 
 """The degree of conceptual similarity between trademarks."""
 enum ConceptualSimilarityDegree {
+  identical
   high_degree
   medium_degree
   low_degree
@@ -161,8 +157,7 @@ type OpponentMark {
   filing_date: Date!
   registration_date: Date
   priority_date: Date
-  goods_services_classes: [Int!]!
-  goods_services_terms: [String!]!
+  goods_services: [GoodsServices!]!
 }
 
 """
@@ -186,8 +181,8 @@ type GoodsServicesComparison {
 Comparison of the marks on visual, aural, and conceptual levels.
 """
 type MarkComparison {
-  visual_similarity: MarkSimilarityDegree!
-  aural_similarity: MarkSimilarityDegree!
+  visual_similarity: SimilarityDegree!
+  aural_similarity: SimilarityDegree!
   conceptual_similarity: ConceptualSimilarityDegree!
   dominant_component: String
 }
@@ -206,4 +201,6 @@ A precedent case cited in the decision.
 type Precedent {
   case_name: String!
   case_reference: String!
+  summary: String
+  relevance_score: Float
 }

@@ -137,7 +137,7 @@ To ensure the vector search for precedents is highly relevant, we will employ a 
 
 ### 5.3. Structured Data Schema
 
-The core data extraction from PDFs will be governed by a strict JSON schema, which will be passed to the Gemini model to ensure a structured, predictable output. The definitive schema is located at `data/response_schema.json`.
+The core data extraction from PDFs will be governed by a strict JSON schema, which will be passed to the Gemini model to ensure a structured, predictable output. The definitive schema is located at `functions/models.py`
 
 ## 6. Development Plan: Phases & Tasks
 
@@ -149,7 +149,7 @@ This project will be executed in a series of focused phases.
 *   **Task 1**: Set up and configure the Firebase project (Firestore, Functions, Storage).
 *   **Task 2**: Implement the developer-facing PDF upload interface in the React frontend.
 *   **Task 3**: Create the `processUploadedPdf` Cloud Function, triggered by uploads to the `raw-case-pdfs` bucket.
-*   **Task 4**: Implement the Gemini data extraction logic within the function, using the prompts from `data/prompts/` and the schema from `data/response_schema.json`.
+*   **Task 4**: Implement the Gemini data extraction logic within the function, using the prompts from `data/prompts/` and the schema from `functions/models.py`.
 *   **Task 5**: Implement the Hybrid Chunking Strategy.
 *   **Task 6**: Implement the embedding generation process using the `gemini-embedding-001` model.
 *   **Task 7**: Set up the Vertex AI Vector Search index and implement the logic to populate it.

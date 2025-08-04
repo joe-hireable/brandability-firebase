@@ -6,9 +6,8 @@ from case PDFs via Gemini, as well as the input/output schemas for the API layer
 These models are the canonical schema definitions for the application.
 """
 from __future__ import annotations
-from typing import Literal
+from typing import Literal, Dict, Optional
 from pydantic import BaseModel, Field, conlist
-from datetime import date
 
 # --- ENUMS ---
 
@@ -20,7 +19,7 @@ ConceptualSimilarityDegree = Literal["identical", "high_degree", "medium_degree"
 DistinctiveCharacter = Literal["very_high_degree", "high_degree", "medium_degree", "low_degree"]
 AverageConsumerAttention = Literal["high", "medium", "low"]
 ConfusionType = Literal["direct", "indirect", "both"]
-OppositionOutcomeEnum = Literal["successful", "partially_successful", "unsuccessful"]
+OppositionOutcome = Literal["successful", "partially_successful", "unsuccessful"]
 OtherGroundsEnum = Literal["5(3)", "5(4)(a)"]
 
 
@@ -41,13 +40,12 @@ class ApplicantMark(BaseModel):
 class OpponentMark(BaseModel):
     """An earlier mark the opponent is relying on."""
     mark: str = Field(..., description="The literal text or description of the mark")
-    mark_type: MarkType = Field(..., description="The type of the mark")
-    registration_number: str = Field(..., description="The registration number of the opponent's mark")
-    filing_date: date = Field(..., description="The filing date of the opponent's mark")
-    registration_date: date | None = Field(None, description="The registration date of the opponent's mark")
-    priority_date: date | None = Field(None, description="The priority date, if any")
-    goods_services_classes: list[int] = Field(..., description="List of Nice classes covered by the opponent's mark")
-    goods_services_terms: list[str] = Field(..., description="List of all goods and service terms for the opponent's mark")
+    mark_type: Optional[MarkType] = Field(..., description="The type of the mark")
+    registration_number: Optional[str] = Field(..., description="The registration number of the opponent's mark")
+    filing_date: Optional[str] = Field(..., description="The filing date of the opponent's mark in DD/MM/YYYY format")
+    registration_date: Optional[str] = Field(..., description="The registration date of the opponent's mark in DD/MM/YYYY format")
+    priority_date: Optional[str] = Field(..., description="The priority date of the opponent's mark in DD/MM/YYYY format")
+    goods_services: Optional[list[GoodsServices]] = Field(..., description="List of goods and services for the opponent's mark")
 
 class GoodsServicesComparison(BaseModel):
     """Comparison between a specific applicant and opponent G&S term."""
@@ -66,18 +64,20 @@ class Precedent(BaseModel):
     """A precedent case cited in the decision."""
     case_name: str = Field(..., description="The name of the cited case")
     case_reference: str = Field(..., description="The reference number of the cited case")
+    summary: str | None = Field(None, description="A brief summary of the precedent's relevance")
+    relevance_score: float | None = Field(None, ge=0.0, le=1.0, description="Relevance score (0.0 to 1.0) for this precedent")
 
 class DecisionRationale(BaseModel):
     """Rationale behind the decision, including key factors and cited precedents."""
     key_factors: list[str] = Field(..., description="Key factors that influenced the decision")
-    precedents_cited: list[Precedent] | None = Field(None, description="A list of precedent cases cited in the decision")
+    precedents_cited: Optional[list[Precedent]] = Field(None, description="A list of precedent cases cited in the decision")
 
 class Case(BaseModel):
     """A structured representation of a trademark opposition case decision."""
-    case_reference: str = Field(..., description="The unique identifier for the case, e.g., 'O/0959/23'")
-    decision_date: date = Field(..., description="The date the decision was issued")
-    decision_maker: str = Field(..., description="The name of the Hearing Officer or Judge")
-    jurisdiction: Jurisdiction = Field(..., description="The legal jurisdiction of the decision")
+    case_reference: Optional[str] = Field(..., description="The unique identifier for the case, e.g., 'O/0959/23'")
+    decision_date: Optional[str] = Field(..., description="The date the decision was issued in DD/MM/YYYY format")
+    decision_maker: Optional[str] = Field(..., description="The name of the Hearing Officer or Judge")
+    jurisdiction: Optional[Jurisdiction] = Field(None, description="The legal jurisdiction of the decision")
     application_number: str = Field(..., description="The application number of the contested trademark")
     applicant_name: str = Field(..., description="The name of the party applying for the trademark")
     opponent_name: str = Field(..., description="The name of the party opposing the trademark application")
@@ -85,17 +85,17 @@ class Case(BaseModel):
     opponent_marks: list[OpponentMark] = Field(..., description="An array of earlier marks the opponent is relying on")
     grounds_for_opposition: list[str] = Field(..., description="The legal grounds for the opposition")
     proof_of_use_requested: bool = Field(..., description="Whether proof of use was requested")
-    proof_of_use_outcome: ProofOfUseOutcome | None = Field(None, description="The outcome of the proof of use assessment")
+    proof_of_use_outcome: Optional[ProofOfUseOutcome] = Field(None, description="The outcome of the proof of use assessment")
     goods_services_comparison: list[GoodsServicesComparison] = Field(..., description="An array of G&S comparisons")
     mark_comparison: MarkComparison = Field(..., description="The detailed comparison of the marks")
     distinctive_character: DistinctiveCharacter = Field(..., description="The assessed distinctive character of the earlier mark")
     average_consumer_attention: AverageConsumerAttention = Field(..., description="The assessed level of attention of the average consumer")
     likelihood_of_confusion: bool = Field(..., description="The final assessment on the likelihood of confusion")
-    confusion_type: ConfusionType | None = Field(None, description="The type of confusion found, if any")
-    opposition_outcome: OppositionOutcomeEnum = Field(..., description="The final outcome of the opposition")
-    other_grounds: list[OtherGroundsEnum] | None = Field(None, description="Other legal grounds for opposition, if any")
-    decision_rationale: DecisionRationale = Field(..., description="The rationale for the decision")
-    global_assessment_notes: str | None = Field(None, description="A summary of the hearing officer's final global assessment and reasoning.")
+    confusion_type: ConfusionType = Field(None, description="The type of confusion found, if any")
+    opposition_outcome: Optional[OppositionOutcome] = Field(None, description="The final outcome of the opposition")
+    other_grounds: Optional[list[OtherGroundsEnum]] = Field(None, description="Other legal grounds for opposition, if any")
+    decision_rationale: Optional[DecisionRationale] = Field(None, description="The rationale for the decision")
+    global_assessment_notes: Optional[str] = Field(None, description="A summary of the hearing officer's final global assessment and reasoning.")
 
 
 # --- API MODELS ---
@@ -105,6 +105,7 @@ class MarkSimilarityRequest(BaseModel):
     """Input for the /mark_similarity endpoint."""
     applicant_mark: str = Field(..., description="The applicant's wordmark")
     opponent_mark: str = Field(..., description="The opponent's wordmark")
+    mark_image_url: str | None = Field(None, description="URL to the figurative mark image, if applicable")
 
 class MarkSimilarityOutput(BaseModel):
     """Output from the /mark_similarity endpoint."""
@@ -112,6 +113,10 @@ class MarkSimilarityOutput(BaseModel):
     aural: SimilarityDegree = Field(..., description="Aural similarity category")
     conceptual: ConceptualSimilarityDegree = Field(..., description="Conceptual similarity category")
     overall_similarity: SimilarityDegree = Field(..., description="Overall similarity category considering all dimensions")
+    visual_score: float = Field(..., ge=0.0, le=1.0, description="Visual similarity score (0.0 to 1.0)")
+    aural_score: float = Field(..., ge=0.0, le=1.0, description="Aural similarity score (0.0 to 1.0)")
+    conceptual_score: float = Field(..., ge=0.0, le=1.0, description="Conceptual similarity score (0.0 to 1.0)")
+    overall_similarity_score: float = Field(..., ge=0.0, le=1.0, description="Overall similarity score (0.0 to 1.0)")
     reasoning: str = Field(..., description="Reasoning for the overall assessment")
 
 class GsSimilarityRequest(BaseModel):
@@ -123,6 +128,7 @@ class GsSimilarityRequest(BaseModel):
 class GsSimilarityOutput(BaseModel):
     """Output from the /gs_similarity endpoint."""
     similarity: SimilarityDegree = Field(..., description="The degree of similarity between the goods/services")
+    similarity_score: float = Field(..., ge=0.0, le=1.0, description="Similarity score (0.0 to 1.0)")
     is_competitive: bool = Field(..., description="Whether the goods/services compete in the marketplace")
     is_complementary: bool = Field(..., description="Whether the goods/services are complementary or used together")
     likelihood_of_confusion: bool = Field(..., description="Whether there is a likelihood of confusion for this G/S pair")
@@ -136,7 +142,7 @@ class CasePredictionRequest(BaseModel):
 
 class CasePredictionOutput(BaseModel):
     """Output from the /case_prediction endpoint."""
-    predicted_outcome: OppositionOutcomeEnum = Field(..., description="The predicted outcome category")
+    predicted_outcome: OppositionOutcome = Field(..., description="The predicted outcome category")
     confidence_score: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0 to 1.0) for the prediction")
     detailed_reasoning: str = Field(..., description="Detailed reasoning supporting the predicted outcome and confidence")
     mark_similarity_assessment: MarkSimilarityOutput = Field(..., description="The detailed mark similarity assessment")
