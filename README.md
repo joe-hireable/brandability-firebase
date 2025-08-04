@@ -13,9 +13,9 @@ A core feature will be the ability to retrieve similar precedent cases from a pu
 
 ## 2. Core Features
 
-The system's functionality will be exposed through a modular set of API endpoints:
+The system's functionality will be exposed through a modular set of functions:
 
-*   **/mark\_similarity**:
+*   **mark\_similarity**:
     *   **Input**: Two wordmarks.
     *   **Analysis**:
         *   **Visual**: Levenshtein distance.
@@ -23,12 +23,12 @@ The system's functionality will be exposed through a modular set of API endpoint
         *   **Conceptual**: Semantic similarity assessed by the Gemini LLM.
     *   **Output**: A detailed breakdown of each similarity score and a global assessment based on UK/EU trademark principles.
 
-*   **/gs\_similarity**:
+*   **gs\_similarity**:
     *   **Input**: A pair of applicant and opponent G&S terms, plus the context of the overall mark similarity.
     *   **Analysis**: Assesses similarity, competitiveness, and complementarity, determining the likelihood and type (direct/indirect) of confusion for that specific pair.
     *   **Output**: A detailed similarity report for the G&S pair.
 
-*   **/case\_prediction**:
+*   **case\_prediction**:
     *   **Input**: The complete case details (marks, all G&S pairs).
     *   **Analysis**: Aggregates the mark and G&S similarity scores to predict the final opposition outcome.
     *   **Output**: A final prediction (successful, partially successful, unsuccessful), a confidence score, and detailed reasoning.
