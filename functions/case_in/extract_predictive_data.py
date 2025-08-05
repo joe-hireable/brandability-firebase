@@ -8,15 +8,17 @@ The extraction follows a schema-enforced approach to ensure consistent data qual
 
 import json
 import logging
+import os
 import urllib.parse
 from pathlib import Path
 from typing import Dict, List, Any
 from collections import Counter
 
 from google.genai import types
+import tempfile
+from google.cloud import storage
 from google.genai.errors import APIError
 from pydantic import ValidationError
-from tenacity import retry, stop_after_attempt, wait_exponential
 
 from utils.clients import get_gemini_client
 from models import Case
@@ -38,21 +40,38 @@ def load_prompts() -> Dict[str, str]:
         logger.error(f"Prompt file not found: {e}")
         raise
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-def get_extraction_attempts(gs_uri: str, prompts: Dict[str, str], num_passes: int = 5) -> List[Dict[str, Any]]:
+def get_extraction_attempts(bucket_name: str, file_name: str, prompts: Dict[str, str], num_passes: int = 5) -> List[Dict[str, Any]]:
     """
-    Calls the Gemini API multiple times with the PDF URI to get multiple extraction results.
+    Calls the Gemini API multiple times with the PDF content to get multiple extraction results.
     
     Args:
-        gs_uri: The Google Cloud Storage URI of the PDF file.
+        bucket_name: The GCS bucket name.
+        file_name: The name of the file in the bucket.
         prompts: The system and user prompts.
         num_passes: The number of times to call the API.
         
     Returns:
         A list of dictionaries, each containing one extraction result from the API.
     """
-    pdf_part = types.Part.from_uri(
-        file_uri=gs_uri,
+    gs_uri = f"gs://{bucket_name}/{file_name}"
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(file_name)
+
+    # Create a temporary file to store the PDF, ensuring it's closed before use
+    # to avoid PermissionError on Windows.
+    temp_pdf_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    temp_pdf_file.close()
+    
+    try:
+        blob.download_to_filename(temp_pdf_file.name)
+        with open(temp_pdf_file.name, 'rb') as f:
+            pdf_bytes = f.read()
+    finally:
+        os.remove(temp_pdf_file.name)
+
+    pdf_part = types.Part.from_bytes(
+        data=pdf_bytes,
         mime_type="application/pdf"
     )
     
@@ -115,6 +134,17 @@ def combine_extraction_results(extraction_attempts: List[Dict[str, Any]]) -> Cas
             except (json.JSONDecodeError, TypeError):
                 final_data[field] = most_common
 
+    # Ensure list types are correctly formatted
+    for field_name, field_model in Case.model_fields.items():
+        if field_name in final_data:
+            # Check if the field is a list type
+            if hasattr(field_model.annotation, '__origin__') and field_model.annotation.__origin__ is list:
+                if not isinstance(final_data[field_name], list):
+                    final_data[field_name] = [final_data[field_name]]
+            # Ensure application_number is a string
+            elif field_name == 'application_number':
+                final_data[field_name] = str(final_data[field_name])
+
     try:
         # Validate the combined data against the Pydantic model
         return Case.model_validate(final_data)
@@ -139,13 +169,12 @@ def extract_structured_data(bucket_name: str, file_name: str) -> Case:
         A `Case` object populated with the extracted data.
     """
     encoded_file_name = urllib.parse.quote(file_name)
-    gs_uri = f"gs://{bucket_name}/{encoded_file_name}"
-    logger.info(f"Starting multi-pass structured data extraction for PDF: {gs_uri}")
+    logger.info(f"Starting multi-pass structured data extraction for PDF: gs://{bucket_name}/{file_name}")
     
     prompts = load_prompts()
     
     # Pass 1: Get multiple extraction attempts from the full PDF
-    extraction_attempts = get_extraction_attempts(gs_uri, prompts)
+    extraction_attempts = get_extraction_attempts(bucket_name, file_name, prompts)
     
     # Pass 2: Combine and validate the results
     final_case = combine_extraction_results(extraction_attempts)
