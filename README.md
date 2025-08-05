@@ -11,12 +11,19 @@ Functions: Python, Firebase Functions
 AI: Vertex AI, google-genai, Gemini 2.5 Pro (`gemini-2.5-pro`)
 
 ## Environment Variables
+### Gemini API Key
 GEMINI_API_KEY=your-api-key
+
+### Emulators
 FIRESTORE_EMULATOR_HOST=localhost:8080
 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
 FIREBASE_STORAGE_EMULATOR_HOST=localhost:9199
+
+### Google Cloud and Firebase Config
 GOOGLE_CLOUD_PROJECT=trademark-prediction-system
 FIREBASE_PROJECT_ID=trademark-prediction-system
+VERTEXAI_LOCATION=europe-west2
+GOOGLE_CLOUD_LOCATION=europe-west2
 PYTHONPATH=.
 LOG_LEVEL=INFO
 
