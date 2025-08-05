@@ -8,6 +8,7 @@ The extraction follows a schema-enforced approach to ensure consistent data qual
 
 import json
 import logging
+import urllib.parse
 from pathlib import Path
 from typing import Dict, List, Any
 from collections import Counter
@@ -137,7 +138,8 @@ def extract_structured_data(bucket_name: str, file_name: str) -> Case:
     Returns:
         A `Case` object populated with the extracted data.
     """
-    gs_uri = f"gs://{bucket_name}/{file_name}"
+    encoded_file_name = urllib.parse.quote(file_name)
+    gs_uri = f"gs://{bucket_name}/{encoded_file_name}"
     logger.info(f"Starting multi-pass structured data extraction for PDF: {gs_uri}")
     
     prompts = load_prompts()
