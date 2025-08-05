@@ -17,8 +17,8 @@ from case_in import case_in
 # --- Firebase and Global Configuration ---
 
 # Set global options for all functions, e.g., region, memory, etc.
-# By default, functions are deployed to us-central1.
-# options.set_global_options(region="europe-west1", memory=options.MemoryOption.GB_1)
+# This is to ensure the function runs in the correct region.
+options.set_global_options(region="europe-west2")
 
 # Initialize Firebase Admin SDK.
 # This is required to interact with Firebase services like Firestore and Storage.

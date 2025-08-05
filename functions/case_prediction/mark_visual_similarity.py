@@ -14,11 +14,11 @@ def _map_score_to_degree(score: float) -> SimilarityDegree:
     """Maps a similarity score (0-100) to a qualitative degree."""
     if score >= 95:
         return "identical"
-    if score >= 85:
+    if score >= 80:
         return "high_degree"
-    if score >= 60:
+    if score >= 65:
         return "medium_degree"
-    if score >= 40:
+    if score >= 50:
         return "low_degree"
     return "dissimilar"
 

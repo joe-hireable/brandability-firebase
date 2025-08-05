@@ -8,3 +8,4 @@ pypdf
 google-cloud-aiplatform
 rapidfuzz
 jellyfish
+python-dotenv

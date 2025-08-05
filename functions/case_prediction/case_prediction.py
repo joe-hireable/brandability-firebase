@@ -18,7 +18,9 @@ from functions.models import (
 )
 from functions.case_prediction.mark_similarity import assess_mark_similarity
 from functions.case_prediction.gs_similarity import assess_gs_similarity
-from functions.utils.clients import gemini_client
+from functions.utils.clients import get_gemini_client
+
+gemini_client = get_gemini_client()
 from google.genai import types
 
 

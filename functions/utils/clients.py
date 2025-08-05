@@ -6,9 +6,14 @@ ensuring they are properly configured and reused across the application.
 """
 
 import logging
+import os
 import firebase_admin
 from firebase_admin import firestore
 from google import genai
+from dotenv import load_dotenv
+
+# Load environment variables from .env.test file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env.test'))
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -33,5 +38,5 @@ def get_gemini_client():
     global _gemini_client
     if not _gemini_client:
         # The API key should be set as an environment variable for security.
-        _gemini_client = genai.Client()
+        _gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     return _gemini_client

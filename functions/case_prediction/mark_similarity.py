@@ -12,18 +12,20 @@ from functions.models import MarkSimilarityRequest, MarkSimilarityOutput, Simila
 from functions.case_prediction.mark_visual_similarity import calculate_visual_similarity
 from functions.case_prediction.mark_aural_similarity import calculate_aural_similarity
 from functions.case_prediction.mark_conceptual_similarity import calculate_conceptual_similarity
-from functions.utils.clients import gemini_client
+from functions.utils.clients import get_gemini_client
+
+gemini_client = get_gemini_client()
 
 
 def _map_score_to_degree(score: float) -> SimilarityDegree:
     """Maps a similarity score (0.0-1.0) to a qualitative degree."""
     if score >= 0.95:
         return "identical"
-    if score >= 0.85:
+    if score >= 0.75:
         return "high_degree"
-    if score >= 0.70:
-        return "medium_degree"
     if score >= 0.55:
+        return "medium_degree"
+    if score >= 0.40:
         return "low_degree"
     return "dissimilar"
 
