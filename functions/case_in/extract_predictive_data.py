@@ -238,9 +238,3 @@ def extract_structured_data(pdf_path: str) -> Case:
     except Exception as e:
         logger.error(f"Structured data extraction pipeline failed for {pdf_path}: {e}", exc_info=True)
         raise
-    finally:
-        # Step 4: Clean up resources to avoid unnecessary costs
-        if uploaded_file:
-            logger.info(f"Deleting uploaded file from Gemini: {uploaded_file.name}")
-            gemini_client.files.delete(name=uploaded_file.name)
-            logger.info("Uploaded file deleted.")
