@@ -42,8 +42,9 @@ def generate_embeddings(chunks: List[Dict[str, Any]]) -> List[List[float]]:
             contents=texts_to_embed
         )
         logger.info("Successfully generated embeddings.")
-        # The result contains a list of embeddings
-        return result.embeddings
+        # The result contains a list of embedding objects.
+        # We need to extract the 'values' from each.
+        return [embedding.values for embedding in result.embeddings]
     except APIError as e:
         logger.error(f"Failed to generate embeddings: {e}")
         raise

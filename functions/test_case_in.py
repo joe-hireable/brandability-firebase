@@ -63,24 +63,29 @@ with open('functions/.env.test', 'r') as f:
             key, value = line.split('=', 1)
             os.environ[key.strip()] = value.strip()
 
-# Initialize Firebase Admin SDK
-# The Admin SDK automatically detects the FIREBASE_STORAGE_EMULATOR_HOST env var
+# --- GCP & Firebase Configuration ---
+# This is now an INTEGRATION TEST that uses live GCP services.
+# Ensure you have authenticated with 'gcloud auth application-default login'
+# and that the required environment variables are set in .env.test
+
 cred = credentials.ApplicationDefault()
-project_id = os.getenv('FIREBASE_PROJECT_ID')
-if not project_id:
-    raise ValueError("FIREBASE_PROJECT_ID environment variable not set.")
+GCP_PROJECT = os.getenv('GCP_PROJECT')
+GCS_BUCKET = os.getenv('GCS_BUCKET')
 
-if not os.getenv('FIREBASE_STORAGE_EMULATOR_HOST'):
-    raise ValueError("FIREBASE_STORAGE_EMULATOR_HOST is not set. Is the emulator running?")
+if not GCP_PROJECT:
+    raise ValueError("GCP_PROJECT environment variable not set.")
+if not GCS_BUCKET:
+    raise ValueError("GCS_BUCKET environment variable not set. This test requires a real GCS bucket.")
 
-firebase_admin.initialize_app(cred, {
-    'projectId': project_id,
-    'storageBucket': f"{project_id}.appspot.com"
-})
+# Initialize Firebase Admin SDK to interact with GCS
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred, {
+        'projectId': GCP_PROJECT,
+        'storageBucket': GCS_BUCKET
+    })
 
-# --- Test Configuration ---
+# --- Test File Selection ---
 PDF_DIRECTORY = 'data/case_pdfs/'
-# Get a list of all PDF files in the directory
 pdf_files = [f for f in os.listdir(PDF_DIRECTORY) if f.endswith('.pdf')]
 if not pdf_files:
     raise FileNotFoundError(f"No PDF files found in {PDF_DIRECTORY}")
@@ -89,9 +94,10 @@ if not pdf_files:
 TEST_PDF_FILE = random.choice(pdf_files)
 TEST_PDF_FILE_PATH = os.path.join(PDF_DIRECTORY, TEST_PDF_FILE)
 
-BUCKET_NAME = os.getenv('FIREBASE_PROJECT_ID') + '.firebasestorage.app'
+# Use the real GCS bucket name
+BUCKET_NAME = GCS_BUCKET
 # The destination path in the bucket
-DESTINATION_BLOB_NAME = 'cases/' + TEST_PDF_FILE
+DESTINATION_BLOB_NAME = f'test_cases/{TEST_PDF_FILE}'
 
 def upload_to_gcs(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
@@ -121,7 +127,13 @@ def run_test():
         logger.error(f"--- Test Failed: {e} ---", exc_info=True)
 
 if __name__ == "__main__":
-    # Note: Ensure you are authenticated with GCP and have the necessary
-    # environment variables set (e.g., GOOGLE_CLOUD_PROJECT).
-    # You can authenticate via the CLI: `gcloud auth application-default login`
+    # Note: This is an integration test that interacts with live GCP services
+    # (Cloud Storage, Gemini API, Vertex AI).
+    # Ensure you have authenticated with GCP:
+    # `gcloud auth application-default login`
+    #
+    # Also ensure the required environment variables are set in `functions/.env.test`:
+    # - GCP_PROJECT: Your Google Cloud project ID.
+    # - GCS_BUCKET: A real GCS bucket for uploads and index files.
+    # - VPC_NETWORK_NAME: The name of the VPC network for the Vector Search endpoint.
     run_test()

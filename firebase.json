@@ -19,6 +19,7 @@
       "source": "functions",
       "codebase": "default",
       "runtime": "python313",
+      "region": "europe-west2",
       "ignore": [
         "node_modules",
         ".git",

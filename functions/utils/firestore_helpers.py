@@ -10,27 +10,26 @@ from typing import List, Dict, Any
 
 from firebase_admin import firestore
 from pydantic import BaseModel
-from google.genai.types import ContentEmbedding
-
 from .clients import get_firestore_client
 from models import Case
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def store_data_in_firestore(case: Case, chunks: List[Dict[str, Any]], embeddings: List[ContentEmbedding]):
+def store_data_in_firestore(case: Case, chunks: List[Dict[str, Any]]):
     """
-    Stores the main case data and its text chunks with embeddings in Firestore.
+    Stores the main case data and its text chunks in Firestore.
+
+    Embeddings are stored separately in Vertex AI Vector Search.
 
     Args:
         case: The structured `Case` object.
-        chunks: The list of text chunks from the full PDF text.
-        embeddings: The list of corresponding embedding vectors.
+        chunks: The list of text chunks from the full PDF text, each with a unique 'chunk_id'.
     """
     case_ref = case.case_reference
     # Sanitize the case reference to be used as a document ID
     doc_id = case_ref.replace('/', '-')
-    logger.info(f"Storing all data for {case_ref} (doc_id: {doc_id}) in Firestore...")
+    logger.info(f"Storing data for {case_ref} (doc_id: {doc_id}) in Firestore...")
     
     db_client = get_firestore_client()
     batch = db_client.batch()
@@ -44,15 +43,17 @@ def store_data_in_firestore(case: Case, chunks: List[Dict[str, Any]], embeddings
     })
     batch.set(case_doc_ref, case_data)
     
-    # Set each chunk in the subcollection for vector search
-    if chunks and embeddings:
+    # Set each chunk in the subcollection
+    if chunks:
         chunks_collection_ref = case_doc_ref.collection("chunks")
-        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-            chunk_doc_ref = chunks_collection_ref.document(f"chunk_{i:04d}")
+        for chunk in chunks:
+            # Use the unique chunk_id generated in the orchestrator
+            chunk_id = chunk["metadata"]["chunk_id"]
+            chunk_doc_ref = chunks_collection_ref.document(chunk_id)
+            
             chunk_data = {
                 "text": chunk["text"],
                 "metadata": chunk["metadata"],
-                "embedding": embedding.values,
                 "createdAt": firestore.SERVER_TIMESTAMP,
             }
             batch.set(chunk_doc_ref, chunk_data)
