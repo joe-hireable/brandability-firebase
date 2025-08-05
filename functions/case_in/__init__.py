@@ -1,0 +1,1 @@
+"""Case ingestion module for trademark prediction system."""

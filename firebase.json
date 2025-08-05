@@ -18,16 +18,14 @@
     {
       "source": "functions",
       "codebase": "default",
-      "runtime": "python311",
+      "runtime": "python313",
       "ignore": [
         "node_modules",
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log"
       ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
-      ]
+      "predeploy": []
     }
   ],
   "dataconnect": {

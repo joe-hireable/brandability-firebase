@@ -12,7 +12,7 @@ from firebase_functions import options, storage_fn
 from firebase_functions.storage_fn import CloudEvent, StorageObjectData
 
 # Local application imports
-import case_in
+from case_in import case_in
 
 # --- Firebase and Global Configuration ---
 

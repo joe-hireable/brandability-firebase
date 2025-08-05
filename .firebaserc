@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "trademark-prediction-system"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
