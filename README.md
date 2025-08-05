@@ -28,13 +28,41 @@ PYTHONPATH=.
 LOG_LEVEL=INFO
 
 ## Functions
-1. `case_in`: triggered by new PDF going into bucket, triggers `chunk_pdf`, `generate_embeddings`, `extract_predictive_data` https://firebase.google.com/docs/functions/custom-events.
-2. `chunk_pdf`: context-aware chunking of PDF cases using vision-guided chunking (used by `case_in` function). Docs - https://arxiv.org/html/2506.16035v1.
-3. `generate_embeddings`: generates embeddings for PDF chunks and stores in firestore (used by `case_in` function).
-4. `extract_predictive_data`: uses gemini-2.5-pro to extract predictive data from cases (used by `case_in` function) and store in our predictive dataset.
-2. `gs_similarity`: uses gemini-2.5-pro to assess similarity between competing goods/services based on good/service terms, NICE classifications and optional descriptions (used directly by users and by the `case_prediction` function).
-3. `mark_similarity`: assess overall similarity of marks based on `mark_visual_similarity`, `mark_aural_similarity` and `mark_conceptual_similarity`, returns overall similarity score and individual visual, aural and conceptual scores (used by the `case_prediction` function).
-4. `mark_visual_similarity`: assesses the visual similarity of wordmarks (case sensitive) using levenstein distance (used by the `mark_similarity` function).
-5. `mark_aural_similarity`: assesses aural similarity of wordmarks using metaphone/double metaphone or similar (used by the `mark_similarity` function).
-6. `mark_conceptual_similarity`: assesses conceptual similarity of wordmarks using gemini-2.5-pro (used by the `mark_similarity` function).
-7. `case_prediction`: predicts `likelihood_of_confusion` and `confusion_type` between 2 competing wordmarks with explainable `reasoning` and `arguments` based on `mark_similarity` results and list of `gs_similarity` results.
+
+The core logic of the application is handled by a set of backend functions, primarily focused on case ingestion, data processing, and AI-driven analysis.
+
+### 1. Case Ingestion Pipeline (`case_in/`)
+
+This module orchestrates the entire case ingestion pipeline, triggered when a new PDF case document is uploaded to a Cloud Storage bucket. It ensures each document is processed, analyzed, and stored for retrieval and predictive modeling.
+
+-   **`case_in.py` (Orchestrator)**: Manages the end-to-end pipeline:
+    1.  **Downloads** the PDF from Cloud Storage.
+    2.  **Coordinates** the chunking, data extraction, and embedding generation steps.
+    3.  **Sets up** the Vertex AI Vector Search index and endpoint if they don't exist.
+    4.  **Upserts** the generated embeddings into the Vector Search index.
+    5.  **Stores** the structured data and text chunks in Firestore.
+
+-   **`chunk_pdf.py` (Vision-Guided Chunking)**:
+    -   Uses Gemini 2.5 Pro to analyse the visual and structural layout of the PDF.
+    -   Identifies primary sections (e.g., "Background", "Decision", "Legal Framework") and their page ranges.
+    -   Creates semantically meaningful chunks based on these sections, preserving the document's original context.
+
+-   **`generate_embeddings.py` (Embedding Generation)**:
+    -   Generates vector embeddings for each text chunk using the `models/embedding-001` model.
+    -   Includes retry logic to handle transient API errors.
+
+-   **`extract_predictive_data.py` (Parallelised Data Extraction)**:
+    -   Extracts structured data from the PDF using Gemini 2.5 Pro with a schema-enforced (`Pydantic`) model.
+    -   Employs a multi-pass, parallel extraction strategy by running multiple API calls simultaneously in a single batch job.
+    -   Consolidates the results by selecting the most common value for each field, ensuring high accuracy and resilience to occasional extraction errors.
+
+### 2. Similarity and Prediction Functions (`case_prediction/`)
+
+These functions are used directly by users or as components in the overall case prediction model.
+
+-   **`gs_similarity`**: Uses Gemini 2.5 Pro to assess similarity between competing goods/services based on their terms, NICE classifications, and optional descriptions.
+-   **`mark_similarity`**: Assesses the overall similarity of two wordmarks by combining visual, aural, and conceptual scores.
+-   **`mark_visual_similarity`**: Assesses visual similarity using Levenshtein distance.
+-   **`mark_aural_similarity`**: Assesses aural similarity using phonetic algorithms like Metaphone/Double Metaphone.
+-   **`mark_conceptual_similarity`**: Assesses conceptual similarity using Gemini 2.5 Pro.
+-   **`case_prediction`**: Predicts the `likelihood_of_confusion` and `confusion_type` for a case. It generates explainable `reasoning` and `arguments` based on the combined results from `mark_similarity` and `gs_similarity`.
