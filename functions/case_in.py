@@ -21,6 +21,7 @@ import concurrent.futures
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Callable, Tuple
 
+import firebase_admin
 import pdfplumber
 from firebase_admin import firestore, storage
 from google import genai
@@ -601,12 +602,11 @@ def generate_embeddings(chunks: List[Dict[str, Any]]) -> List[List[float]]:
         # Use embed_content which handles batching for lists of strings
         result = gemini_client.models.embed_content(
             model="models/embedding-001",
-            content=texts_to_embed,
-            task_type="retrieval_document",
+            contents=texts_to_embed
         )
         logger.info("Successfully generated embeddings.")
-        # The result is a dict with a list of embeddings
-        return result["embedding"]
+        # The result contains a list of embeddings
+        return result.embeddings
     except APIError as e:
         logger.error(f"Failed to generate embeddings: {e}")
         raise
