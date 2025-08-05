@@ -1,6 +1,8 @@
 import os
 import random
 import sys
+import logging
+import json
 import firebase_admin
 from firebase_admin import credentials, storage
 
@@ -8,6 +10,50 @@ from firebase_admin import credentials, storage
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from functions.case_in.case_in import process_case_from_storage
+
+# Custom JSON formatter for file logging
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "name": record.name,
+            "level": record.levelname,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            log_record['exc_info'] = self.formatException(record.exc_info)
+        
+        # Add full Gemini response if it exists in the log record
+        if hasattr(record, 'gemini_response'):
+            log_record['gemini_response'] = record.gemini_response
+
+        return json.dumps(log_record)
+
+# --- Logging Configuration ---
+log_file_path = 'test_logs.json'
+
+# Clear existing handlers to prevent duplicate logging
+if logging.root.handlers:
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+# 1. Console Handler (for human-readable output)
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+# 2. File Handler (for JSON output, overwrites file on each run)
+file_handler = logging.FileHandler(log_file_path, mode='w')
+file_handler.setFormatter(JsonFormatter())
+
+# Configure root logger
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[
+        console_handler,
+        file_handler
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env.test
 with open('functions/.env.test', 'r') as f:
@@ -52,27 +98,27 @@ def upload_to_gcs(bucket_name, source_file_name, destination_blob_name):
     bucket = storage.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
     blob.upload_from_filename(source_file_name)
-    print(f"File {source_file_name} uploaded to {destination_blob_name}.")
+    logger.info(f"File {source_file_name} uploaded to {destination_blob_name}.")
 
 def run_test():
     """
     Runs the end-to-end test for the case ingestion pipeline.
     """
-    print("--- Starting Case Ingestion Test ---")
-    print(f"Using random PDF: {TEST_PDF_FILE_PATH}")
+    logger.info("--- Starting Case Ingestion Test ---")
+    logger.info(f"Using random PDF: {TEST_PDF_FILE_PATH}")
     
     # 1. Upload the test PDF to the bucket to trigger the function
-    print(f"Uploading {TEST_PDF_FILE_PATH} to gs://{BUCKET_NAME}/{DESTINATION_BLOB_NAME}")
+    logger.info(f"Uploading {TEST_PDF_FILE_PATH} to gs://{BUCKET_NAME}/{DESTINATION_BLOB_NAME}")
     upload_to_gcs(BUCKET_NAME, TEST_PDF_FILE_PATH, DESTINATION_BLOB_NAME)
     
     # 2. Manually trigger the processing logic for testing purposes
     # In a real scenario, the Cloud Function would be triggered automatically.
-    print("\n--- Manually Triggering processing_case_from_storage ---")
+    logger.info("--- Manually Triggering processing_case_from_storage ---")
     try:
         process_case_from_storage(BUCKET_NAME, DESTINATION_BLOB_NAME)
-        print("\n--- Test Completed Successfully ---")
+        logger.info("--- Test Completed Successfully ---")
     except Exception as e:
-        print(f"\n--- Test Failed: {e} ---")
+        logger.error(f"--- Test Failed: {e} ---", exc_info=True)
 
 if __name__ == "__main__":
     # Note: Ensure you are authenticated with GCP and have the necessary

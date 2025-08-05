@@ -64,7 +64,7 @@ def process_case_from_storage(bucket_name: str, file_name: str):
             
             # Step 4: Extract structured data for predictive analysis
             logger.info("Extracting structured data from PDF using Gemini...")
-            case_obj = extract_structured_data(bucket_name, file_name)
+            case_obj = extract_structured_data(temp_pdf.name)
             logger.info(f"Extracted structured data for case: {case_obj.case_reference}")
 
             # Step 5: Store everything in Firestore
