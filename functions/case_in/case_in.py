@@ -15,7 +15,6 @@ and handles errors appropriately.
 import logging
 import os
 import tempfile
-from typing import Dict, List, Any
 
 from firebase_admin import storage
 
@@ -23,7 +22,6 @@ from .chunk_pdf import chunk_pdf
 from .generate_embeddings import generate_embeddings
 from .extract_predictive_data import extract_structured_data
 from utils.firestore_helpers import store_data_in_firestore
-from models import Case, MarkComparison
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -55,44 +53,19 @@ def process_case_from_storage(bucket_name: str, file_name: str):
             logger.info(f"Downloaded {file_name} to temporary file {temp_pdf.name}")
             
             # Step 2: Extract chunks using Vision-Guided Chunking
-            logger.info("Starting Vision-Guided Chunking")
-            text_chunks, case_ref = chunk_pdf(temp_pdf.name)
-            logger.info(f"Created {len(text_chunks)} chunks for case {case_ref}")
+            logger.info("Starting Vision-Guided Chunking for vector search embeddings")
+            text_chunks = chunk_pdf(temp_pdf.name)
+            logger.info(f"Created {len(text_chunks)} chunks for vector search")
             
             # Step 3: Generate embeddings for the text chunks
             logger.info("Generating embeddings for vector search")
             embeddings = generate_embeddings(text_chunks)
             logger.info(f"Generated {len(embeddings)} embeddings")
             
-            # Step 4: Extract structured data for predictive analysis (SKIPPED FOR THIS TEST)
-            logger.info("Skipping structured data extraction for this test.")
-            # case_obj = extract_structured_data(temp_pdf.name)
-            # logger.info(f"Extracted structured data for case: {case_obj.case_reference}")
-            
-            # Create a placeholder Case object for storing chunks and embeddings
-            # In a real scenario, this would be populated by extract_structured_data
-            placeholder_mark_comparison = MarkComparison(
-                visual_similarity="dissimilar",
-                aural_similarity="dissimilar",
-                conceptual_similarity="dissimilar"
-            )
-            case_obj = Case(
-                case_reference=case_ref,
-                decision_date="01/01/1970",
-                decision_maker="System",
-                application_number="unknown",
-                applicant_name="unknown",
-                opponent_name="unknown",
-                applicant_marks=[],
-                opponent_marks=[],
-                grounds_for_opposition=[],
-                proof_of_use_requested=False,
-                goods_services_comparison=[],
-                mark_comparison=placeholder_mark_comparison,
-                distinctive_character="low_degree",
-                average_consumer_attention="low",
-                likelihood_of_confusion=False
-            )
+            # Step 4: Extract structured data for predictive analysis
+            logger.info("Extracting structured data from PDF using Gemini...")
+            case_obj = extract_structured_data(bucket_name, file_name)
+            logger.info(f"Extracted structured data for case: {case_obj.case_reference}")
 
             # Step 5: Store everything in Firestore
             logger.info("Storing all data in Firestore")

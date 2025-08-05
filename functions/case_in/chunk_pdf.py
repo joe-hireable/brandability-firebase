@@ -53,7 +53,7 @@ def extract_case_reference(pdf_path: str) -> str:
     logger.warning(f"Could not find case reference for {pdf_path}, falling back to generated ID.")
     return f"CASE-{int(time.time())}"
 
-def chunk_pdf(pdf_path: str) -> (List[Dict[str, Any]]):
+def chunk_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     """
     Creates contextually relevant chunks from a PDF based on document headings.
     
@@ -155,4 +155,4 @@ def chunk_pdf(pdf_path: str) -> (List[Dict[str, Any]]):
         })
     
     logger.info(f"Created {len(chunks)} section-based chunks for case {case_ref}")
-    return chunks, case_ref
+    return chunks
