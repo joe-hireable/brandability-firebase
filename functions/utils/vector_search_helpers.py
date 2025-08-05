@@ -66,6 +66,7 @@ def get_or_create_vector_search_index(
             leaf_node_embedding_count=500,
             leaf_nodes_to_search_percent=80,
             description="Vector search index for trademark case law.",
+            index_update_method="STREAM_UPDATE",
         )
         logger.info(f"Successfully created Vector Search index: {index.resource_name}")
         return index

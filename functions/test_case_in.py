@@ -5,11 +5,12 @@ import logging
 import json
 import firebase_admin
 from firebase_admin import credentials, storage
+from google.cloud import aiplatform
 
 # Add project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from functions.case_in.case_in import process_case_from_storage
+from functions.case_in.case_in import process_case_from_storage, INDEX_DISPLAY_NAME
 
 # Custom JSON formatter for file logging
 class JsonFormatter(logging.Formatter):
@@ -111,6 +112,7 @@ def run_test():
     Runs the end-to-end test for the case ingestion pipeline.
     """
     logger.info("--- Starting Case Ingestion Test ---")
+
     logger.info(f"Using random PDF: {TEST_PDF_FILE_PATH}")
     
     # 1. Upload the test PDF to the bucket to trigger the function

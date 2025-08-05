@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 INDEX_NAME = "trademark_cases_index"
 INDEX_DISPLAY_NAME = "Trademark Cases Index"
 ENDPOINT_DISPLAY_NAME = "Trademark Cases Endpoint"
-DEPLOYMENT_ID = "trademark_cases_deployment_v1"
+DEPLOYMENT_ID = "trademark_index"
 EMBEDDING_DIMENSIONS = 768 # Based on the output of "models/embedding-001"
 
 def process_case_from_storage(bucket_name: str, file_name: str):
