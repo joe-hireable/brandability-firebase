@@ -11,7 +11,7 @@ from typing import List, Dict, Any
 from firebase_admin import firestore
 from pydantic import BaseModel
 from .clients import get_firestore_client
-from models import Case
+from functions.models import Case
 
 # Configure logging
 logger = logging.getLogger(__name__)

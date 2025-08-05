@@ -16,8 +16,8 @@ from collections import Counter
 from google.genai import types
 from google.genai.errors import APIError
 
-from utils.clients import get_gemini_client
-from models import Case
+from functions.utils.clients import get_gemini_client
+from functions.models import Case
 
 # Configure logging
 logger = logging.getLogger(__name__)

@@ -15,7 +15,7 @@ import pdfplumber
 from pydantic import BaseModel, Field
 
 from google.genai import types
-from utils.clients import get_gemini_client
+from functions.utils.clients import get_gemini_client
 
 # Configure logging
 logger = logging.getLogger(__name__)

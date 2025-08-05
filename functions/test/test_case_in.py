@@ -8,7 +8,7 @@ from firebase_admin import credentials, storage
 from google.cloud import aiplatform
 
 # Add project root to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from functions.case_in.case_in import process_case_from_storage, INDEX_DISPLAY_NAME
 
