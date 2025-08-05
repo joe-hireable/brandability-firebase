@@ -21,9 +21,11 @@ PYTHONPATH=.
 LOG_LEVEL=INFO
 
 ## Functions
-1. `case_in`: processes real case decisions into our database and predictive dataset, used by the below functions.
-2. `chunk_pdf`: context-aware chunking of PDF cases using vision-guided chunking (https://arxiv.org/html/2506.16035v1).
-2. `gs_similarity`: assess similarity between competing goods/services based on good/service terms and NICE classifications (used directly by users and by the `case_prediction` function).
+1. `case_in`: triggered by new PDF going into bucket, triggers `chunk_pdf`, `generate_embeddings`, `extract_predictive_data` https://firebase.google.com/docs/functions/custom-events.
+2. `chunk_pdf`: context-aware chunking of PDF cases using vision-guided chunking (used by `case_in` function). Docs - https://arxiv.org/html/2506.16035v1.
+3. `generate_embeddings`: generates embeddings for PDF chunks and stores in firestore (used by `case_in` function).
+4. `extract_predictive_data`: uses gemini-2.5-pro to extract predictive data from cases (used by `case_in` function) and store in our predictive dataset.
+2. `gs_similarity`: uses gemini-2.5-pro to assess similarity between competing goods/services based on good/service terms, NICE classifications and optional descriptions (used directly by users and by the `case_prediction` function).
 3. `mark_similarity`: assess overall similarity of marks based on `mark_visual_similarity`, `mark_aural_similarity` and `mark_conceptual_similarity`, returns overall similarity score and individual visual, aural and conceptual scores (used by the `case_prediction` function).
 4. `mark_visual_similarity`: assesses the visual similarity of wordmarks (case sensitive) using levenstein distance (used by the `mark_similarity` function).
 5. `mark_aural_similarity`: assesses aural similarity of wordmarks using metaphone/double metaphone or similar (used by the `mark_similarity` function).
