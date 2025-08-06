@@ -20,11 +20,11 @@ import uuid
 
 from firebase_admin import storage
 
-from .chunk_pdf import chunk_pdf
-from .generate_embeddings import generate_embeddings
-from .extract_predictive_data import extract_structured_data
-from functions.utils.firestore_helpers import store_data_in_firestore
-from functions.utils.vector_search_helpers import (
+from case_in.chunk_pdf import chunk_pdf
+from case_in.generate_embeddings import generate_embeddings
+from case_in.extract_predictive_data import extract_structured_data
+from utils.firestore_helpers import store_data_in_firestore
+from utils.vector_search_helpers import (
     get_or_create_vector_search_index,
     get_or_create_index_endpoint,
     deploy_index_to_endpoint,

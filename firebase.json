@@ -18,7 +18,7 @@
     {
       "source": "functions",
       "codebase": "default",
-      "runtime": "python313",
+      "runtime": "python311",
       "region": "europe-west2",
       "ignore": [
         "node_modules",

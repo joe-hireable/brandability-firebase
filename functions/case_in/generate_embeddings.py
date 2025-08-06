@@ -12,7 +12,7 @@ from typing import List, Dict, Any
 from google.genai.errors import APIError
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from functions.utils.clients import get_gemini_client
+from utils.clients import get_gemini_client
 
 # Configure logging
 logger = logging.getLogger(__name__)
