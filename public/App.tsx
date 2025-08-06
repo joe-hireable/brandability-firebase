@@ -1,6 +1,7 @@
 import { FileUpload } from "./components/FileUpload";
 import { MarkAuralSimilarity } from "./components/MarkAuralSimilarity";
 import { MarkConceptualSimilarity } from "./components/MarkConceptualSimilarity";
+import { MarkGsSimilarity } from "./components/MarkGsSimilarity";
 import { MarkVisualSimilarity } from "./components/MarkVisualSimilarity";
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
           <MarkVisualSimilarity />
           <MarkAuralSimilarity />
           <MarkConceptualSimilarity />
+          <MarkGsSimilarity />
         </div>
       </div>
     </div>

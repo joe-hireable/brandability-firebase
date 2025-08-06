@@ -5,6 +5,28 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/calculate_visual_similarity",
+        "function": "calculate_visual_similarity"
+      },
+      {
+        "source": "/calculate_aural_similarity",
+        "function": "calculate_aural_similarity"
+      },
+      {
+        "source": "/calculate_conceptual_similarity",
+        "function": "calculate_conceptual_similarity"
+      },
+      {
+        "source": "/calculate_gs_similarity",
+        "function": "calculate_gs_similarity"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
   "storage": {

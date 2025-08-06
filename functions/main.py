@@ -96,7 +96,7 @@ def calculate_visual_similarity(req: https_fn.Request) -> https_fn.Response:
     HTTP function to calculate visual similarity between two marks.
     """
     applicant_mark = req.get_json().get("applicant_mark")
-    opponent_mark = req.get_json().get("opponent_.mark")
+    opponent_mark = req.get_json().get("opponent_mark")
 
     if not applicant_mark or not opponent_mark:
         return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
@@ -145,7 +145,7 @@ def calculate_conceptual_similarity(req: https_fn.Request) -> https_fn.Response:
 
 
 @https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
-def assess_goods_and_services_similarity(req: https_fn.Request) -> https_fn.Response:
+def calculate_gs_similarity(req: https_fn.Request) -> https_fn.Response:
     """
     HTTP function to assess goods and services similarity.
     """
@@ -157,7 +157,7 @@ def assess_goods_and_services_similarity(req: https_fn.Request) -> https_fn.Resp
         return https_fn.Response(f"Invalid request body: {e}", status=400)
 
     try:
-        result = gs_similarity.assess_gs_similarity(gs_request)
+        result, _, _ = gs_similarity.assess_gs_similarity(gs_request)
         return jsonify(result.model_dump())
     except Exception as e:
         log.error(f"Error assessing G&S similarity: {e}", exc_info=True)
