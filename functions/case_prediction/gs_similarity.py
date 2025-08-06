@@ -107,8 +107,8 @@ def find_similar_examples(
                     example_key = tuple(sorted((example["term_1"], example["term_2"])))
                     if example_key not in seen_examples:
                         few_shot_examples.append(
-                            f"- Term 1: '{example['term_1']}', "
-                            f"Term 2: '{example['term_2']}', "
+                            f"- Term 1: '{example['term_1']}' (Class {example['class_1']}), "
+                            f"Term 2: '{example['term_2']}' (Class {example['class_2']}), "
                             f"Similarity: {example['similarity_degree']}"
                         )
                         seen_examples.add(example_key)
