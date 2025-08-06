@@ -7,7 +7,7 @@ These models are the canonical schema definitions for the application.
 """
 from __future__ import annotations
 from typing import Literal, Dict, Optional
-from pydantic import BaseModel, Field, conlist
+from pydantic import BaseModel, Field, conlist, ConfigDict
 
 # --- ENUMS ---
 
@@ -28,6 +28,8 @@ OtherGroundsEnum = Literal["5(3)", "5(4)(a)"]
 
 class GoodsServices(BaseModel):
     """Represents the goods and services for a specific class."""
+    model_config = ConfigDict(populate_by_name=True)
+
     class_num: int = Field(..., alias="class", ge=1, le=45, description="The Nice Classification class number (1-45)")
     terms: list[str] = Field(..., description="The list of good or service terms")
 
@@ -119,20 +121,22 @@ class MarkSimilarityOutput(BaseModel):
     overall_similarity_score: float = Field(..., ge=0.0, le=1.0, description="Overall similarity score (0.0 to 1.0)")
     reasoning: str = Field(..., description="Reasoning for the overall assessment")
 
+class GoodService(BaseModel):
+    """Represents a single good or service term."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    term: str = Field(..., description="The literal text of the good or service term")
+    class_num: int = Field(..., alias="class", ge=1, le=45, description="The Nice Classification class number (1-45)")
+
 class GsSimilarityRequest(BaseModel):
     """Input for the /gs_similarity endpoint."""
-    applicant_term: str = Field(..., description="The applicant's good/service term")
-    opponent_term: str = Field(..., description="The opponent's good/service term")
-    mark_similarity: MarkSimilarityOutput = Field(..., description="The context of mark similarity from the /mark_similarity endpoint")
+    applicant_term: GoodService = Field(..., description="The applicant's good/service term and NICE Classification")
+    opponent_term: GoodService = Field(..., description="The opponent's good/service term and NICE Classification")
 
 class GsSimilarityOutput(BaseModel):
     """Output from the /gs_similarity endpoint."""
     similarity: SimilarityDegree = Field(..., description="The degree of similarity between the goods/services")
     similarity_score: float = Field(..., ge=0.0, le=1.0, description="Similarity score (0.0 to 1.0)")
-    is_competitive: bool = Field(..., description="Whether the goods/services compete in the marketplace")
-    is_complementary: bool = Field(..., description="Whether the goods/services are complementary or used together")
-    likelihood_of_confusion: bool = Field(..., description="Whether there is a likelihood of confusion for this G/S pair")
-    confusion_type: ConfusionType | None = Field(None, description="Type of confusion (null if no likelihood)")
     reasoning: str = Field(..., description="Reasoning for the assessment")
 
 class CasePredictionRequest(BaseModel):

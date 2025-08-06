@@ -1,48 +1,160 @@
 """
-Assesses the similarity between goods and services (G&S) using the Gemini API.
+Assesses the similarity between goods and services (G&S) using a
+Retrieval-Augmented Generation (RAG) approach with Vertex AI Vector Search.
 
-This module provides a function to compare two G&S terms in the context of
-their associated trademarks. It leverages a large language model to analyze
-not only the literal meaning but also the commercial relationship (e.g.,
-competitive, complementary) between the goods or services.
+This module uses a multi-step process:
+1.  Generates an embedding for the input G&S terms.
+2.  Queries a pre-populated Vector Search index to find the most similar
+    real-world examples from a dataset of 21,000+ EUIPO cases.
+3.  Constructs a detailed "few-shot" prompt, augmenting the original request
+    with the retrieved examples.
+4.  Calls the Gemini API with this augmented prompt to get a final,
+    context-aware similarity assessment.
 """
+import os
+import json
+import logging
+from typing import List, Dict, Any
+
+from google.cloud import aiplatform
+
 from models import GsSimilarityRequest, GsSimilarityOutput
 from utils.clients import get_gemini_client
 from google.genai import types
 
+# --- Configuration ---
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 gemini_client = get_gemini_client()
-from google.genai import types
 
+# --- Environment Variables ---
+# These are the resource names from the `setup_vector_search.py` script output
+try:
+    VECTOR_SEARCH_ENDPOINT_NAME = os.environ["VECTOR_SEARCH_ENDPOINT_NAME"]
+    DEPLOYED_INDEX_ID = os.environ["DEPLOYED_INDEX_ID"]
+except KeyError:
+    raise RuntimeError(
+        "Required environment variables VECTOR_SEARCH_ENDPOINT_NAME or "
+        "DEPLOYED_INDEX_ID are not set."
+    )
 
-def assess_gs_similarity(request: GsSimilarityRequest) -> GsSimilarityOutput:
+# --- Constants ---
+PROCESSED_DATA_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "..", "data", "processed_similarity_data.jsonl"
+)
+EMBEDDING_MODEL_NAME = "embedding-001"
+NUM_NEIGHBORS = 5  # Number of similar examples to retrieve
+
+# --- Data Loading ---
+def load_similarity_data(path: str) -> Dict[str, List[Dict[str, Any]]]:
+    """Loads the processed similarity data and creates a lookup table."""
+    lookup_table = {}
+    with open(path, "r") as f:
+        for line in f:
+            record = json.loads(line)
+            # Add record to lookup table for both terms
+            for term in [record["term_1"], record["term_2"]]:
+                if term not in lookup_table:
+                    lookup_table[term] = []
+                lookup_table[term].append(record)
+    return lookup_table
+
+similarity_lookup_table = load_similarity_data(PROCESSED_DATA_PATH)
+
+# --- AI and Vector Search Functions ---
+
+def get_embedding(text: str) -> List[float]:
+    """Generates an embedding for a given text using the Gemini API."""
+    response = gemini_client.models.embed_content(
+        model=EMBEDDING_MODEL_NAME,
+        contents=text
+    )
+    return response.embeddings[0].values
+
+def find_similar_examples(
+    applicant_term: str, opponent_term: str
+) -> str:
     """
-    Assesses the similarity between two goods/services terms using Gemini.
+    Finds similar G&S pairs from the dataset using Vector Search.
+    """
+    logger.info(f"Finding similar examples for: '{applicant_term}' vs '{opponent_term}'")
+    
+    # Initialize the Vector Search endpoint
+    endpoint = aiplatform.MatchingEngineIndexEndpoint(
+        index_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME
+    )
 
-    Args:
-        request: A GsSimilarityRequest object containing the applicant and
-                 opponent G&S terms and the mark similarity context.
+    # Generate embeddings for both terms
+    applicant_embedding = get_embedding(applicant_term)
+    opponent_embedding = get_embedding(opponent_term)
+
+    # Query for neighbors for both terms
+    response = endpoint.find_neighbors(
+        queries=[applicant_embedding, opponent_embedding],
+        deployed_index_id=DEPLOYED_INDEX_ID,
+        num_neighbors=NUM_NEIGHBORS,
+    )
+
+    # Collect unique examples from the neighbors
+    seen_examples = set()
+    few_shot_examples = []
+    for neighbor_list in response:
+        for neighbor in neighbor_list:
+            neighbor_term = neighbor.id
+            if neighbor_term in similarity_lookup_table:
+                for example in similarity_lookup_table[neighbor_term]:
+                    example_key = tuple(sorted((example["term_1"], example["term_2"])))
+                    if example_key not in seen_examples:
+                        few_shot_examples.append(
+                            f"- Term 1: '{example['term_1']}', "
+                            f"Term 2: '{example['term_2']}', "
+                            f"Similarity: {example['similarity_degree']}"
+                        )
+                        seen_examples.add(example_key)
+    
+    if not few_shot_examples:
+        logger.warning("No relevant examples found in the database.")
+        return "No relevant examples found in the database."
+
+    logger.info(f"Retrieved {len(few_shot_examples)} RAG examples:\n" + "\n".join(few_shot_examples))
+    return "\n".join(few_shot_examples)
+
+
+def assess_gs_similarity(request: GsSimilarityRequest) -> tuple[GsSimilarityOutput, str, str]:
+    """
+    Assesses the similarity between two goods/services terms using a RAG approach.
 
     Returns:
-        A GsSimilarityOutput object with a detailed G&S similarity assessment.
+        A tuple containing:
+        - GsSimilarityOutput: The similarity assessment result.
+        - str: The few-shot examples retrieved from Vector Search.
+        - str: The full prompt sent to the Gemini model.
     """
+    # 1. Retrieval: Find similar examples from our dataset
+    similar_examples = find_similar_examples(
+        request.applicant_term.term, request.opponent_term.term
+    )
+
+    # 2. Augmentation: Construct the prompt with the retrieved examples
     prompt = f"""
-    Analyze the similarity between the following two goods/services terms,
-    considering the provided context of their respective trademarks' similarity.
+    You are an expert in trademark law, specializing in assessing the similarity
+    between goods and services (G&S). Your task is to analyze a new G&S pair
+    based on real-world examples from past cases.
 
-    - Applicant's Term: "{request.applicant_term}"
-    - Opponent's Term: "{request.opponent_term}"
+    Here are some relevant examples of real goods/services comparisons from our database:
+    {similar_examples}
 
-    Context of Mark Similarity:
-    - Overall Mark Similarity: {request.mark_similarity.overall_similarity}
-      (Score: {request.mark_similarity.overall_similarity_score:.2f})
-    - Reasoning: {request.mark_similarity.reasoning}
+    Now, analyze the following new case with the above examples as context:
 
-    Based on this, assess the following:
-    1.  The degree of similarity between the goods/services.
-    2.  Whether they are competitive or complementary in the marketplace.
-    3.  The likelihood of consumer confusion for this specific G/S pair.
+    - Applicant's Term: "{request.applicant_term.term}" (Class {request.applicant_term.class_num})
+    - Opponent's Term: "{request.opponent_term.term}" (Class {request.opponent_term.class_num})
+
+    Based on all of this information, provide a detailed assessment.
     """
 
+    # 3. Generation: Call the Gemini API with the augmented prompt
+    logger.info(f"Constructed Gemini Prompt:\n---\n{prompt}\n---")
     response = gemini_client.models.generate_content(
         model="gemini-2.5-pro",
         contents=prompt,
@@ -52,4 +164,5 @@ def assess_gs_similarity(request: GsSimilarityRequest) -> GsSimilarityOutput:
         ),
     )
 
-    return GsSimilarityOutput.parse_raw(response.text)
+    result = GsSimilarityOutput.model_validate_json(response.text)
+    return result, similar_examples, prompt

@@ -145,7 +145,7 @@ def calculate_conceptual_similarity(req: https_fn.Request) -> https_fn.Response:
 
 
 @https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
-def assess_gs_similarity(req: https_fn.Request) -> https_fn.Response:
+def assess_goods_and_services_similarity(req: https_fn.Request) -> https_fn.Response:
     """
     HTTP function to assess goods and services similarity.
     """
@@ -158,7 +158,7 @@ def assess_gs_similarity(req: https_fn.Request) -> https_fn.Response:
 
     try:
         result = gs_similarity.assess_gs_similarity(gs_request)
-        return jsonify(result.dict())
+        return jsonify(result.model_dump())
     except Exception as e:
         log.error(f"Error assessing G&S similarity: {e}", exc_info=True)
         return https_fn.Response("Internal server error", status=500)
