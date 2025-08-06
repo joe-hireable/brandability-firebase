@@ -82,22 +82,24 @@ def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
         raise
     
     
-@https_fn.on_call()
-def calculate_visual_similarity(req: https_fn.CallableRequest) -> tuple[float, str]:
-    """
-    Callable function to calculate visual similarity between two marks.
-    """
-    applicant_mark = req.data.get("applicant_mark")
-    opponent_mark = req.data.get("opponent_mark")
+from flask import jsonify
 
-    if not applicant_mark or not opponent_mark:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            message="Missing applicant_mark or opponent_mark",
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+def api(req: https_fn.Request) -> https_fn.Response:
+    """
+    API gateway for all HTTP functions.
+    """
+    if req.path == "/calculateVisualSimilarity":
+        applicant_mark = req.get_json().get("applicant_mark")
+        opponent_mark = req.get_json().get("opponent_mark")
+
+        if not applicant_mark or not opponent_mark:
+            return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
+
+        score, degree = mark_visual_similarity.calculate_visual_similarity(
+            applicant_mark, opponent_mark
         )
 
-    score, degree = mark_visual_similarity.calculate_visual_similarity(
-        applicant_mark, opponent_mark
-    )
-
-    return score, degree
+        return jsonify({"score": score, "degree": degree})
+    
+    return https_fn.Response("Not Found", status=404)

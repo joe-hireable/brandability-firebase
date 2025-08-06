@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import type { SimilarityDegree } from "../lib/models";
-import { app } from "../firebase";
 
 interface VisualSimilarityResult {
     score: number;
@@ -30,17 +28,24 @@ export function MarkVisualSimilarity() {
         setResult(null);
 
         try {
-            const functions = getFunctions(app);
-            const calculateVisualSimilarityFunc = httpsCallable(functions, 'api/calculateVisualSimilarity');
-
-            const response = await calculateVisualSimilarityFunc({
-                applicant_mark: applicantMark, 
-                opponent_mark: opponentMark 
+            // Use the new API endpoint
+            const response = await fetch('/api/calculateVisualSimilarity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    applicant_mark: applicantMark,
+                    opponent_mark: opponentMark,
+                }),
             });
-            
-            const [score, degree] = response.data as [number, SimilarityDegree];
 
-            setResult({ score, degree });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setResult(data);
 
         } catch (err) {
             console.error("Error calling function:", err);

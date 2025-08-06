@@ -19,7 +19,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:5004/trademark-prediction-system/us-central1',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
   }
