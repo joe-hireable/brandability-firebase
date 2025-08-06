@@ -64,13 +64,14 @@ def get_parallel_extraction_attempts(
     ))
 
     # Create multiple requests for the batch job.
-    # The system prompt is placed at the beginning of the contents.
+    # The system prompt is placed in a system_instruction parameter inside config.
     requests = [
         {
-            'contents': [prompts["system_prompt"], gcs_part, prompts["user_prompt"]],
+            'contents': [gcs_part, prompts["user_prompt"]],
             'config': {
                 'response_mime_type': 'application/json',
                 'response_schema': Case,
+                'system_instruction': prompts["system_prompt"],
             },
         }
         for _ in range(num_passes)

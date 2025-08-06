@@ -91,7 +91,6 @@
     - Prioritise explicit statements from the Hearing Officer/Judge.
     - Be as concise as possible when filling in the key_factors for the decision_rationale.
     - Do *not* perform your own legal analysis.  Extract only the findings and statements made in the decision.
-    - Adhere *strictly* to the JSON schema structure and data types provided in response_schema.
   </extraction_rules>
 
   <few_shot_examples>
@@ -101,9 +100,4 @@
 <task>
 **Task:**  
 Process the attached case document and extract data into a JSON object that conforms to the predefined JSON schema (provided in "response_schema").  Follow the Reasoning Methodology and Extraction Rules precisely. Only return the JSON data.
-
-## **Case Text Provided:**
-<case>
-"<${document}>"
-</case>
 </task>

@@ -69,3 +69,4 @@ node_modules/
 .dataconnect
 data/case_pdfs/
 test_logs.json
+.env.yaml
