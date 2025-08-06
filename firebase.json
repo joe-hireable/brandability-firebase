@@ -42,6 +42,9 @@
       "codebase": "default",
       "runtime": "python311",
       "region": "europe-west2",
+      "dotenv": [
+        ".env.yaml"
+      ],
       "ignore": [
         "node_modules",
         ".git",

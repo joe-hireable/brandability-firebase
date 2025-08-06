@@ -68,6 +68,11 @@ def predict_case_outcome(request: CasePredictionRequest) -> CasePredictionOutput
             gs_assessments.append(future.result())
 
     # 3. Generate Final Prediction with Gemini
+    gs_assessment_details = "\n".join([
+        f'- G/S Pair: "{gs.applicant_term}" vs "{gs.opponent_term}" -> Similarity: {gs.similarity} (Score: {gs.similarity_score:.2f}), Likelihood of Confusion: {gs.likelihood_of_confusion}, Reasoning: {gs.reasoning}'
+        for gs in gs_assessments
+    ])
+
     synthesis_prompt = f"""
     You are a trademark law expert. Based on the following detailed analysis,
     predict the final outcome of this opposition case.
@@ -77,7 +82,7 @@ def predict_case_outcome(request: CasePredictionRequest) -> CasePredictionOutput
     - Reasoning: {mark_similarity_assessment.reasoning}
 
     **Goods & Services Similarity Assessments:**
-    {"".join([f'- G/S Pair: "{gs.applicant_term}" vs "{gs.opponent_term}" -> Similarity: {gs.similarity} (Score: {gs.similarity_score:.2f}), Likelihood of Confusion: {gs.likelihood_of_confusion}, Reasoning: {gs.reasoning}\\n' for gs in gs_assessments])}
+    {gs_assessment_details}
 
     Synthesize all this information to provide a final prediction.
     """

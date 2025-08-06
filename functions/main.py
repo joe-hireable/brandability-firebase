@@ -36,11 +36,10 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 # Environment variable for the target storage bucket
-# The GOOGLE_CLOUD_PROJECT environment variable is automatically set by the Cloud Functions runtime.
-PDF_BUCKET = f"{os.getenv('GOOGLE_CLOUD_PROJECT')}.appspot.com"
+PDF_BUCKET = os.getenv('STORAGE_BUCKET')
 
 
-@storage_fn.on_object_finalized(bucket=PDF_BUCKET)
+@storage_fn.on_object_finalized()
 def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
     """
     Triggers the case ingestion pipeline when a new PDF is uploaded to the
@@ -70,7 +69,7 @@ def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
         # The main processing is delegated to the `case_in` module to keep
         # this entry point clean and focused on triggering logic.
         log.info(f"Starting case ingestion pipeline for: {file_name}")
-        case_in.process_case_from_storage(bucket_name=bucket, file_name=file_name)
+        case_in.process_case_from_storage(file_name=file_name)
         log.info(f"Successfully completed case ingestion for: {file_name}")
 
     except Exception as e:

@@ -78,6 +78,8 @@ if not GCP_PROJECT:
 if not GCS_BUCKET:
     raise ValueError("GCS_BUCKET environment variable not set. This test requires a real GCS bucket.")
 
+os.environ['STORAGE_BUCKET'] = GCS_BUCKET
+
 # Initialize Firebase Admin SDK to interact with GCS
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred, {
@@ -123,7 +125,7 @@ def run_test():
     # In a real scenario, the Cloud Function would be triggered automatically.
     logger.info("--- Manually Triggering processing_case_from_storage ---")
     try:
-        process_case_from_storage(BUCKET_NAME, DESTINATION_BLOB_NAME)
+        process_case_from_storage(DESTINATION_BLOB_NAME)
         logger.info("--- Test Completed Successfully ---")
     except Exception as e:
         logger.error(f"--- Test Failed: {e} ---", exc_info=True)

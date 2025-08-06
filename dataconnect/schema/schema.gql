@@ -36,8 +36,6 @@ enum SimilarityDegree {
   dissimilar
 }
 
-# Removed redundant MarkSimilarityDegree enum since we're using SimilarityDegree consistently
-
 """The degree of conceptual similarity between trademarks."""
 enum ConceptualSimilarityDegree {
   identical
@@ -77,10 +75,9 @@ enum OppositionOutcome {
   unsuccessful
 }
 
-"""Other legal grounds for opposition."""
 enum OtherGrounds {
-  G_5_3 # Represents "5(3)"
-  G_5_4_a # Represents "5(4)(a)"
+  FIVE_THREE
+  FIVE_FOUR_A
 }
 
 
@@ -93,114 +90,100 @@ A structured representation of a trademark opposition case decision.
 This is the main document stored in the 'cases' collection.
 """
 type Case @table(name: "cases", key: "id") {
-  id: String! @col(name: "case_reference")
-  decision_date: Date!
-  decision_maker: String!
-  jurisdiction: Jurisdiction!
-  application_number: String!
-  applicant_name: String!
-  opponent_name: String!
-  applicant_marks: [ApplicantMark!]!
-  opponent_marks: [OpponentMark!]!
-  grounds_for_opposition: [String!]!
-  proof_of_use_requested: Boolean!
-  proof_of_use_outcome: ProofOfUseOutcome
-  goods_services_comparison: [GoodsServicesComparison!]!
-  mark_comparison: MarkComparison!
-  distinctive_character: DistinctiveCharacter!
-  average_consumer_attention: AverageConsumerAttention!
-  likelihood_of_confusion: Boolean!
-  confusion_type: ConfusionType
-  opposition_outcome: OppositionOutcome!
-  other_grounds: [OtherGrounds!]
-  decision_rationale: DecisionRationale!
-  global_assessment_notes: String
-  # One-to-many relationship to the Chunks sub-collection
-  chunks: [Chunk!]! @relation(collection: "chunks", field: "case", reference: "id")
+  id: String! @col(name: "caseReference")
+  decisionDate: Date
+  decisionMaker: String
+  jurisdiction: Jurisdiction
+  applicationNumber: String!
+  applicantName: String!
+  opponentName: String!
+  groundsForOpposition: [String!]!
+  proofOfUseRequested: Boolean!
+  proofOfUseOutcome: ProofOfUseOutcome
+  distinctiveCharacter: DistinctiveCharacter!
+  averageConsumerAttention: AverageConsumerAttention!
+  likelihoodOfConfusion: Boolean!
+  confusionType: ConfusionType
+  oppositionOutcome: OppositionOutcome
+  otherGrounds: [OtherGrounds]
+  globalAssessmentNotes: String
 }
-
-"""
-Represents a text chunk from a case PDF, used for vector search.
-Stored in the 'chunks' sub-collection within a Case document.
-"""
-type Chunk @table(name: "chunks") {
-  # Data Connect will auto-generate an ID if not specified
-  case: Case! @col(name: "case_reference") # Foreign key back to the parent Case
-  source_section: String!
-  page_number: Int!
-  chunk_sequence_id: Int!
-  text: String!
-  embedding: [Float!]! @col(type: "vector", dimensions: 3072)
-}
-
-
-# -------------------
-# EMBEDDED OBJECTS (Not separate collections)
-# -------------------
 
 """
 A mark the applicant is trying to register.
 """
-type ApplicantMark {
+type ApplicantMark @table(name: "applicantMarks", key: "id") {
+  id: String!
   mark: String!
-  mark_type: MarkType!
-  goods_services: [GoodsServices!]!
+  markType: MarkType!
+  case: Case!
 }
 
 """
 An earlier mark the opponent is relying on.
 """
-type OpponentMark {
+type OpponentMark @table(name: "opponentMarks", key: "id") {
+  id: String!
   mark: String!
-  mark_type: MarkType!
-  registration_number: String!
-  filing_date: Date!
-  registration_date: Date
-  priority_date: Date
-  goods_services: [GoodsServices!]!
+  markType: MarkType
+  registrationNumber: String
+  filingDate: Date
+  registrationDate: Date
+  priorityDate: Date
+  case: Case!
 }
 
 """
 Represents the goods and services for a specific class.
 """
-type GoodsServices {
-  class: Int!
+type GoodsServices @table(name: "goodsServices", key: "id") {
+  id: String!
+  classNum: Int! @col(name: "class")
   terms: [String!]!
+  applicantMark: ApplicantMark
+  opponentMark: OpponentMark
 }
 
 """
 Comparison between a specific applicant and opponent G&S term.
 """
-type GoodsServicesComparison {
-  applicant_term: String!
-  opponent_term: String!
+type GoodsServicesComparison @table(name: "goodsServicesComparisons", key: "id") {
+  id: String!
+  applicantTerm: String!
+  opponentTerm: String!
   similarity: SimilarityDegree!
+  case: Case!
 }
 
 """
 Comparison of the marks on visual, aural, and conceptual levels.
 """
-type MarkComparison {
-  visual_similarity: SimilarityDegree!
-  aural_similarity: SimilarityDegree!
-  conceptual_similarity: ConceptualSimilarityDegree!
-  dominant_component: String
+type MarkComparison @table(name: "markComparisons", key: "id") {
+  id: String!
+  visualSimilarity: SimilarityDegree!
+  auralSimilarity: SimilarityDegree!
+  conceptualSimilarity: ConceptualSimilarityDegree!
+  dominantComponent: String
+  case: Case!
 }
 
 """
 Rationale behind the decision, including key factors and cited precedents.
 """
-type DecisionRationale {
-  key_factors: [String!]!
-  precedents_cited: [Precedent!]
+type DecisionRationale @table(name: "decisionRationales", key: "id") {
+  id: String!
+  keyFactors: [String!]!
+  case: Case!
 }
 
 """
 A precedent case cited in the decision.
 """
-type Precedent {
-  case_name: String!
-  case_reference: String!
+type Precedent @table(name: "precedents", key: "id") {
+  id: String!
+  caseName: String!
+  caseReference: String!
   summary: String
-  relevance_score: Float
+  relevanceScore: Float
+  decisionRationale: DecisionRationale!
 }

@@ -41,7 +41,7 @@ ENDPOINT_DISPLAY_NAME = "Trademark Cases Endpoint"
 DEPLOYMENT_ID = "trademark_index"
 EMBEDDING_DIMENSIONS = 768 # Based on the output of "models/embedding-001"
 
-def process_case_from_storage(bucket_name: str, file_name: str):
+def process_case_from_storage(file_name: str):
     """
     Orchestrates the entire case ingestion process for a file from Cloud Storage.
     
@@ -55,9 +55,9 @@ def process_case_from_storage(bucket_name: str, file_name: str):
     7. Store structured data and text chunks in Firestore.
     
     Args:
-        bucket_name: The name of the Cloud Storage bucket.
         file_name: The name of the file in the bucket.
     """
+    bucket_name = os.environ.get("STORAGE_BUCKET")
     # For local development, connect to the Storage emulator
     if os.environ.get("FUNCTIONS_EMULATOR") == "true":
         os.environ["FIREBASE_STORAGE_EMULATOR_HOST"] = "localhost:9199"
