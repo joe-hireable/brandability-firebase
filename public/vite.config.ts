@@ -27,6 +27,10 @@ export default defineConfig({
       '/calculate_conceptual_similarity': {
         target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
         changeOrigin: true,
+      },
+      '/assess_gs_similarity': {
+        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
+        changeOrigin: true,
       }
     }
   }

@@ -17,7 +17,9 @@ from case_prediction import (
     mark_aural_similarity,
     mark_conceptual_similarity,
     mark_visual_similarity,
+    gs_similarity,
 )
+from models import GsSimilarityRequest
 
 # --- Firebase and Global Configuration ---
 
@@ -140,3 +142,23 @@ def calculate_conceptual_similarity(req: https_fn.Request) -> https_fn.Response:
     )
 
     return jsonify({"score": score, "degree": degree, "reasoning": reasoning})
+
+
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+def assess_gs_similarity(req: https_fn.Request) -> https_fn.Response:
+    """
+    HTTP function to assess goods and services similarity.
+    """
+    try:
+        data = req.get_json()
+        gs_request = GsSimilarityRequest(**data)
+    except Exception as e:
+        log.error(f"Error parsing request body: {e}", exc_info=True)
+        return https_fn.Response(f"Invalid request body: {e}", status=400)
+
+    try:
+        result = gs_similarity.assess_gs_similarity(gs_request)
+        return jsonify(result.dict())
+    except Exception as e:
+        log.error(f"Error assessing G&S similarity: {e}", exc_info=True)
+        return https_fn.Response("Internal server error", status=500)

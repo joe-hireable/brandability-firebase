@@ -147,15 +147,17 @@ def deploy_index_to_endpoint(
 def upsert_embeddings_to_vector_search(
     index: aiplatform.MatchingEngineIndex,
     embedding_ids: List[str],
-    embeddings: List[List[float]]
+    embeddings: List[List[float]],
+    batch_size: int = 1000
 ):
     """
-    Upserts (inserts or updates) embeddings into the Vector Search index.
+    Upserts (inserts or updates) embeddings into the Vector Search index in batches.
 
     Args:
         index: The Vector Search index object.
         embedding_ids: A list of unique string IDs for each embedding.
         embeddings: A list of embedding vectors.
+        batch_size: The number of embeddings to upsert in each batch.
     """
     if not embedding_ids or not embeddings:
         logger.warning("No embeddings or IDs provided to upsert. Skipping.")
@@ -165,17 +167,20 @@ def upsert_embeddings_to_vector_search(
         raise ValueError("The number of embedding IDs must match the number of embeddings.")
 
     try:
-        logger.info(f"Upserting {len(embeddings)} embeddings to index {index.display_name}...")
+        logger.info(f"Upserting {len(embeddings)} embeddings to index {index.display_name} in batches of {batch_size}...")
         
-        # The upsert operation takes a list of IndexDatapoint objects.
         datapoints = [
             IndexDatapoint(datapoint_id=id, feature_vector=embedding)
             for id, embedding in zip(embedding_ids, embeddings)
         ]
         
-        index.upsert_datapoints(datapoints=datapoints)
+        # Upsert in batches
+        for i in range(0, len(datapoints), batch_size):
+            batch = datapoints[i:i + batch_size]
+            logger.info(f"Upserting batch {i // batch_size + 1} of {len(datapoints) // batch_size + 1}...")
+            index.upsert_datapoints(datapoints=batch)
         
-        logger.info("Successfully upserted embeddings to Vector Search.")
+        logger.info("Successfully upserted all embeddings to Vector Search.")
         
     except Exception as e:
         logger.error(f"Failed to upsert embeddings to Vector Search: {e}", exc_info=True)

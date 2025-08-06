@@ -2,6 +2,7 @@ import { FileUpload } from "./components/FileUpload";
 import { MarkAuralSimilarity } from "./components/MarkAuralSimilarity";
 import { MarkConceptualSimilarity } from "./components/MarkConceptualSimilarity";
 import { MarkVisualSimilarity } from "./components/MarkVisualSimilarity";
+import { GsSimilarity } from "./components/GsSimilarity";
 
 function App() {
   return (
@@ -30,10 +31,13 @@ function App() {
           Use the tools below to assess similarity between trademarks on
           different vectors.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           <MarkVisualSimilarity />
           <MarkAuralSimilarity />
           <MarkConceptualSimilarity />
+        </div>
+        <div className="border-t pt-8">
+          <GsSimilarity />
         </div>
       </div>
     </div>

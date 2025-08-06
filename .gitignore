@@ -69,3 +69,8 @@ node_modules/
 .dataconnect
 data/case_pdfs/
 test_logs.json
+data/processed_similarity_data.jsonl
+.gitignore
+data/2025_08_06_Results_CFSimilarity.xls
+.gitignore
+data/term_embeddings.json

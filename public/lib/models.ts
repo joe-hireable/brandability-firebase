@@ -1,5 +1,6 @@
 export type SimilarityDegree = "identical" | "high_degree" | "medium_degree" | "low_degree" | "dissimilar";
 export type ConceptualSimilarityDegree = "identical" | "high_degree" | "medium_degree" | "low_degree" | "dissimilar" | "neutral";
+export type ConfusionType = "direct" | "indirect" | "both";
 
 export interface MarkSimilarityRequest {
     applicant_mark: string;
@@ -31,6 +32,6 @@ export interface GsSimilarityOutput {
     is_competitive: boolean;
     is_complementary: boolean;
     likelihood_of_confusion: boolean;
-    confusion_type?: "direct" | "indirect" | "both" | null;
+    confusion_type?: ConfusionType | null;
     reasoning: string;
 }
