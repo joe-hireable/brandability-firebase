@@ -20,9 +20,9 @@ import uuid
 
 from firebase_admin import storage
 
-from case_in.chunk_pdf import chunk_pdf
-from case_in.generate_embeddings import generate_embeddings
-from case_in.extract_predictive_data import extract_structured_data
+from .chunk_pdf import chunk_pdf
+from .generate_embeddings import generate_embeddings
+from .extract_predictive_data import extract_structured_data
 from utils.firestore_helpers import store_data_in_firestore
 from utils.vector_search_helpers import (
     get_or_create_vector_search_index,
@@ -58,6 +58,10 @@ def process_case_from_storage(bucket_name: str, file_name: str):
         bucket_name: The name of the Cloud Storage bucket.
         file_name: The name of the file in the bucket.
     """
+    # For local development, connect to the Storage emulator
+    if os.environ.get("FUNCTIONS_EMULATOR") == "true":
+        os.environ["FIREBASE_STORAGE_EMULATOR_HOST"] = "localhost:9199"
+        
     logger.info(f"Processing file: {file_name} from bucket: {bucket_name}")
     
     bucket = storage.bucket(bucket_name)

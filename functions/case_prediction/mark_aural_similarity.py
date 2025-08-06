@@ -8,7 +8,7 @@ distance to account for variations in pronunciation.
 """
 import jellyfish
 
-from functions.models import SimilarityDegree
+from models import SimilarityDegree
 
 
 def _map_score_to_degree(score: float) -> SimilarityDegree:

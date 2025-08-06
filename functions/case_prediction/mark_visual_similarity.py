@@ -7,7 +7,7 @@ library for an efficient implementation of the Levenshtein algorithm.
 """
 from rapidfuzz.fuzz import ratio
 
-from functions.models import SimilarityDegree
+from models import SimilarityDegree
 
 
 def _map_score_to_degree(score: float) -> SimilarityDegree:

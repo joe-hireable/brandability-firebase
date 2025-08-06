@@ -5,10 +5,10 @@ import logging
 import json
 import firebase_admin
 from firebase_admin import credentials, storage
-from google.cloud import aiplatform
 
-# Add project root to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# Define and add project root to the Python path for robust imports and file access
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, PROJECT_ROOT)
 
 from functions.case_in.case_in import process_case_from_storage, INDEX_DISPLAY_NAME
 
@@ -56,8 +56,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env.test
-with open('functions/.env.test', 'r') as f:
+# Load environment variables from .env.test using an absolute path
+with open(os.path.join(PROJECT_ROOT, 'functions', '.env.test'), 'r') as f:
     for line in f:
         line = line.strip()
         if line and not line.startswith('#') and '=' in line:
@@ -86,7 +86,7 @@ if not firebase_admin._apps:
     })
 
 # --- Test File Selection ---
-PDF_DIRECTORY = 'data/case_pdfs/'
+PDF_DIRECTORY = os.path.join(PROJECT_ROOT, 'data', 'case_pdfs')
 pdf_files = [f for f in os.listdir(PDF_DIRECTORY) if f.endswith('.pdf')]
 if not pdf_files:
     raise FileNotFoundError(f"No PDF files found in {PDF_DIRECTORY}")

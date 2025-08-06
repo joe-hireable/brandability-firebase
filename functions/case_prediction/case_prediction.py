@@ -9,16 +9,16 @@ data points into a reasoned prediction.
 from itertools import product
 from concurrent.futures import ThreadPoolExecutor
 
-from functions.models import (
+from models import (
     CasePredictionRequest,
     CasePredictionOutput,
     MarkSimilarityRequest,
     GsSimilarityRequest,
     GsSimilarityOutput,
 )
-from functions.case_prediction.mark_similarity import assess_mark_similarity
-from functions.case_prediction.gs_similarity import assess_gs_similarity
-from functions.utils.clients import get_gemini_client
+from .mark_similarity import assess_mark_similarity
+from .gs_similarity import assess_gs_similarity
+from utils.clients import get_gemini_client
 
 gemini_client = get_gemini_client()
 from google.genai import types

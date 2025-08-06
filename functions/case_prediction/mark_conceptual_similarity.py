@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field
 
 from google.genai import types
 
-from functions.models import ConceptualSimilarityDegree
-from functions.utils.clients import get_gemini_client
+from models import ConceptualSimilarityDegree
+from utils.clients import get_gemini_client
 
 gemini_client = get_gemini_client()
 

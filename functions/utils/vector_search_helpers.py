@@ -8,7 +8,7 @@ deployment, and upserting of data to a vector search index.
 
 import logging
 import os
-from typing import List, Optional
+from typing import List
 
 from google.cloud import aiplatform
 from google.cloud.aiplatform_v1.types import IndexDatapoint

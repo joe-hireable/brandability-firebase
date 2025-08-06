@@ -8,11 +8,11 @@ to generate a final, reasoned analysis.
 """
 from concurrent.futures import ThreadPoolExecutor
 
-from functions.models import MarkSimilarityRequest, MarkSimilarityOutput, SimilarityDegree
-from functions.case_prediction.mark_visual_similarity import calculate_visual_similarity
-from functions.case_prediction.mark_aural_similarity import calculate_aural_similarity
-from functions.case_prediction.mark_conceptual_similarity import calculate_conceptual_similarity
-from functions.utils.clients import get_gemini_client
+from models import MarkSimilarityRequest, MarkSimilarityOutput, SimilarityDegree
+from .mark_visual_similarity import calculate_visual_similarity
+from .mark_aural_similarity import calculate_aural_similarity
+from .mark_conceptual_similarity import calculate_conceptual_similarity
+from utils.clients import get_gemini_client
 
 gemini_client = get_gemini_client()
 

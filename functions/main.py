@@ -8,11 +8,12 @@ import logging
 import os
 
 from firebase_admin import initialize_app
-from firebase_functions import options, storage_fn
+from firebase_functions import options, storage_fn, https_fn
 from firebase_functions.storage_fn import CloudEvent, StorageObjectData
 
 # Local application imports
 from case_in import case_in
+from case_prediction import mark_visual_similarity
 
 # --- Firebase and Global Configuration ---
 
@@ -79,3 +80,24 @@ def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
         # 2. Send a notification (e.g., via Cloud Tasks, Pub/Sub, or email).
         # 3. Re-raise the exception to mark the function execution as a failure.
         raise
+    
+    
+@https_fn.on_call()
+def calculate_visual_similarity(req: https_fn.CallableRequest) -> tuple[float, str]:
+    """
+    Callable function to calculate visual similarity between two marks.
+    """
+    applicant_mark = req.data.get("applicant_mark")
+    opponent_mark = req.data.get("opponent_mark")
+
+    if not applicant_mark or not opponent_mark:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            message="Missing applicant_mark or opponent_mark",
+        )
+
+    score, degree = mark_visual_similarity.calculate_visual_similarity(
+        applicant_mark, opponent_mark
+    )
+
+    return score, degree

@@ -13,5 +13,14 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "./")
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5004/trademark-prediction-system/us-central1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })

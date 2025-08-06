@@ -6,8 +6,8 @@ their associated trademarks. It leverages a large language model to analyze
 not only the literal meaning but also the commercial relationship (e.g.,
 competitive, complementary) between the goods or services.
 """
-from functions.models import GsSimilarityRequest, GsSimilarityOutput
-from functions.utils.clients import get_gemini_client
+from models import GsSimilarityRequest, GsSimilarityOutput
+from utils.clients import get_gemini_client
 from google.genai import types
 
 gemini_client = get_gemini_client()
