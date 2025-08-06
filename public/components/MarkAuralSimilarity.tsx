@@ -5,15 +5,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "./ui/label";
 import type { SimilarityDegree } from "../lib/models";
 
-interface VisualSimilarityResult {
+interface AuralSimilarityResult {
     score: number;
     degree: SimilarityDegree;
 }
 
-export function MarkVisualSimilarity() {
+export function MarkAuralSimilarity() {
     const [applicantMark, setApplicantMark] = useState("");
     const [opponentMark, setOpponentMark] = useState("");
-    const [result, setResult] = useState<VisualSimilarityResult | null>(null);
+    const [result, setResult] = useState<AuralSimilarityResult | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +28,7 @@ export function MarkVisualSimilarity() {
         setResult(null);
 
         try {
-            // Use the new API endpoint
-            const response = await fetch('/calculate_visual_similarity', {
+            const response = await fetch('/calculate_aural_similarity', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,29 +57,29 @@ export function MarkVisualSimilarity() {
     return (
         <Card className="w-full max-w-md">
             <CardHeader>
-                <CardTitle>Visual Similarity</CardTitle>
+                <CardTitle>Aural Similarity</CardTitle>
                 <CardDescription>
-                    Enter two wordmarks to calculate their visual similarity based on the
-                    Levenshtein distance.
+                    Enter two wordmarks to calculate their aural similarity based on
+                    phonetic algorithms (Double Metaphone and Jaro-Winkler).
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="applicant-mark">Applicant Mark</Label>
+                    <Label htmlFor="applicant-mark-aural">Applicant Mark</Label>
                     <Input
-                        id="applicant-mark"
+                        id="applicant-mark-aural"
                         value={applicantMark}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApplicantMark(e.target.value)}
-                        placeholder="e.g., Coca-Cola"
+                        placeholder="e.g., Cococola"
                     />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="opponent-mark">Opponent Mark</Label>
+                        <Label htmlFor="opponent-mark-aural">Opponent Mark</Label>
                         <Input
-                            id="opponent-mark"
+                            id="opponent-mark-aural"
                             value={opponentMark}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOpponentMark(e.target.value)}
-                            placeholder="e.g., Koka-Kola"
+                            placeholder="e.g., Kokakola"
                         />
                     </div>
             </CardContent>

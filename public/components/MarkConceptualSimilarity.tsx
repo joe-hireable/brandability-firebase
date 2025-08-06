@@ -5,15 +5,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "./ui/label";
 import type { SimilarityDegree } from "../lib/models";
 
-interface VisualSimilarityResult {
+interface ConceptualSimilarityResult {
     score: number;
     degree: SimilarityDegree;
+    reasoning: string;
 }
 
-export function MarkVisualSimilarity() {
+export function MarkConceptualSimilarity() {
     const [applicantMark, setApplicantMark] = useState("");
     const [opponentMark, setOpponentMark] = useState("");
-    const [result, setResult] = useState<VisualSimilarityResult | null>(null);
+    const [result, setResult] = useState<ConceptualSimilarityResult | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +29,7 @@ export function MarkVisualSimilarity() {
         setResult(null);
 
         try {
-            // Use the new API endpoint
-            const response = await fetch('/calculate_visual_similarity', {
+            const response = await fetch('/calculate_conceptual_similarity', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,29 +58,28 @@ export function MarkVisualSimilarity() {
     return (
         <Card className="w-full max-w-md">
             <CardHeader>
-                <CardTitle>Visual Similarity</CardTitle>
+                <CardTitle>Conceptual Similarity</CardTitle>
                 <CardDescription>
-                    Enter two wordmarks to calculate their visual similarity based on the
-                    Levenshtein distance.
+                    Enter two wordmarks to calculate their conceptual similarity using a Large Language Model.
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="applicant-mark">Applicant Mark</Label>
+                    <Label htmlFor="applicant-mark-conceptual">Applicant Mark</Label>
                     <Input
-                        id="applicant-mark"
+                        id="applicant-mark-conceptual"
                         value={applicantMark}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApplicantMark(e.target.value)}
-                        placeholder="e.g., Coca-Cola"
+                        placeholder="e.g., Apple"
                     />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="opponent-mark">Opponent Mark</Label>
+                        <Label htmlFor="opponent-mark-conceptual">Opponent Mark</Label>
                         <Input
-                            id="opponent-mark"
+                            id="opponent-mark-conceptual"
                             value={opponentMark}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOpponentMark(e.target.value)}
-                            placeholder="e.g., Koka-Kola"
+                            placeholder="e.g., Pear"
                         />
                     </div>
             </CardContent>
@@ -101,6 +100,9 @@ export function MarkVisualSimilarity() {
                         <p>
                             Similarity Degree:{" "}
                             <span className="font-mono">{result.degree}</span>
+                        </p>
+                        <p className="mt-2">
+                            <span className="font-semibold">Reasoning:</span> {result.reasoning}
                         </p>
                     </div>
                 )}

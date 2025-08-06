@@ -13,7 +13,11 @@ from firebase_functions.storage_fn import CloudEvent, StorageObjectData
 
 # Local application imports
 from case_in import case_in
-from case_prediction import mark_visual_similarity
+from case_prediction import (
+    mark_aural_similarity,
+    mark_conceptual_similarity,
+    mark_visual_similarity,
+)
 
 # --- Firebase and Global Configuration ---
 
@@ -85,21 +89,54 @@ def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
 from flask import jsonify
 
 @https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
-def api(req: https_fn.Request) -> https_fn.Response:
+def calculate_visual_similarity(req: https_fn.Request) -> https_fn.Response:
     """
-    API gateway for all HTTP functions.
+    HTTP function to calculate visual similarity between two marks.
     """
-    if req.path == "/calculateVisualSimilarity":
-        applicant_mark = req.get_json().get("applicant_mark")
-        opponent_mark = req.get_json().get("opponent_mark")
+    applicant_mark = req.get_json().get("applicant_mark")
+    opponent_mark = req.get_json().get("opponent_.mark")
 
-        if not applicant_mark or not opponent_mark:
-            return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
+    if not applicant_mark or not opponent_mark:
+        return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
 
-        score, degree = mark_visual_similarity.calculate_visual_similarity(
-            applicant_mark, opponent_mark
-        )
+    score, degree = mark_visual_similarity.calculate_visual_similarity(
+        applicant_mark, opponent_mark
+    )
 
-        return jsonify({"score": score, "degree": degree})
-    
-    return https_fn.Response("Not Found", status=404)
+    return jsonify({"score": score, "degree": degree})
+
+
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+def calculate_aural_similarity(req: https_fn.Request) -> https_fn.Response:
+    """
+    HTTP function to calculate aural similarity between two marks.
+    """
+    applicant_mark = req.get_json().get("applicant_mark")
+    opponent_mark = req.get_json().get("opponent_mark")
+
+    if not applicant_mark or not opponent_mark:
+        return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
+
+    score, degree = mark_aural_similarity.calculate_aural_similarity(
+        applicant_mark, opponent_mark
+    )
+
+    return jsonify({"score": score, "degree": degree})
+
+
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+def calculate_conceptual_similarity(req: https_fn.Request) -> https_fn.Response:
+    """
+    HTTP function to calculate conceptual similarity between two marks.
+    """
+    applicant_mark = req.get_json().get("applicant_mark")
+    opponent_mark = req.get_json().get("opponent_mark")
+
+    if not applicant_mark or not opponent_mark:
+        return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
+
+    score, degree, reasoning = mark_conceptual_similarity.calculate_conceptual_similarity(
+        applicant_mark, opponent_mark
+    )
+
+    return jsonify({"score": score, "degree": degree, "reasoning": reasoning})

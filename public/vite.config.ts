@@ -16,10 +16,17 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
-        target: 'http://localhost:5004/trademark-prediction-system/us-central1',
+      '/calculate_visual_similarity': {
+        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+      },
+      '/calculate_aural_similarity': {
+        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
+        changeOrigin: true,
+      },
+      '/calculate_conceptual_similarity': {
+        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
+        changeOrigin: true,
       }
     }
   }
