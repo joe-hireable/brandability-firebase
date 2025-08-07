@@ -57,7 +57,7 @@ def process_case_from_storage(file_name: str):
     Args:
         file_name: The name of the file in the bucket.
     """
-    bucket_name = os.environ.get("STORAGE_BUCKET")
+    bucket_name = os.environ.get("GCS_BUCKET")
     # For local development, connect to the Storage emulator
     if os.environ.get("FUNCTIONS_EMULATOR") == "true":
         os.environ["FIREBASE_STORAGE_EMULATOR_HOST"] = "localhost:9199"

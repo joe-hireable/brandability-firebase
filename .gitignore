@@ -77,3 +77,4 @@ data/term_embeddings.json
 
 functions/.env.test
 .env.yaml
+functions/.env.test

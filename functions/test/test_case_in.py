@@ -78,8 +78,6 @@ if not GCP_PROJECT:
 if not GCS_BUCKET:
     raise ValueError("GCS_BUCKET environment variable not set. This test requires a real GCS bucket.")
 
-os.environ['STORAGE_BUCKET'] = GCS_BUCKET
-
 # Initialize Firebase Admin SDK to interact with GCS
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred, {

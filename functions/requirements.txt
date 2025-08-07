@@ -10,7 +10,3 @@ rapidfuzz
 jellyfish
 python-dotenv
 flask
-openpyxl
-pandas
-numpy
-xlrd
