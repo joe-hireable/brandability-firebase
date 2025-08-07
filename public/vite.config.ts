@@ -17,19 +17,19 @@ export default defineConfig({
   server: {
     proxy: {
       '/calculate_visual_similarity': {
-        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
+        target: 'http://localhost:5004/brandability-firebase/europe-west2',
         changeOrigin: true,
       },
       '/calculate_aural_similarity': {
-        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
+        target: 'http://localhost:5004/brandability-firebase/europe-west2',
         changeOrigin: true,
       },
       '/calculate_conceptual_similarity': {
-        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
+        target: 'http://localhost:5004/brandability-firebase/europe-west2',
         changeOrigin: true,
       },
       '/calculate_gs_similarity': {
-        target: 'http://localhost:5004/trademark-prediction-system/europe-west2',
+        target: 'http://localhost:5004/brandability-firebase/europe-west2',
         changeOrigin: true,
       }
     }

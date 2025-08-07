@@ -62,43 +62,64 @@ def find_similar_examples(
     """
     logger.info(f"Finding similar examples for: '{applicant_term}' vs '{opponent_term}'")
     
-    # Initialize the Vector Search endpoint
-    endpoint = aiplatform.MatchingEngineIndexEndpoint(
-        index_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME
-    )
+    try:
+        # Initialize aiplatform with explicit project and location
+        aiplatform.init(
+            project=os.environ.get("GCP_PROJECT"),
+            location=os.environ.get("GCP_REGION", "europe-west2")
+        )
+        
+        # Initialize the Vector Search endpoint
+        endpoint = aiplatform.MatchingEngineIndexEndpoint(
+            index_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME
+        )
 
-    # Generate embeddings for both terms
-    applicant_embedding = get_embedding(applicant_term)
-    opponent_embedding = get_embedding(opponent_term)
+        # Generate embeddings for both terms
+        applicant_embedding = get_embedding(applicant_term)
+        opponent_embedding = get_embedding(opponent_term)
 
-    # Query for neighbors for both terms
-    response = endpoint.find_neighbors(
-        queries=[applicant_embedding, opponent_embedding],
-        deployed_index_id=DEPLOYED_INDEX_ID,
-        num_neighbors=NUM_NEIGHBORS,
-    )
+        # Query for neighbors using individual queries to avoid API issues
+        all_neighbors = []
+        
+        # Query for applicant term
+        applicant_response = endpoint.find_neighbors(
+            queries=[applicant_embedding],
+            deployed_index_id=DEPLOYED_INDEX_ID,
+            num_neighbors=NUM_NEIGHBORS,
+        )
+        all_neighbors.extend(applicant_response[0] if applicant_response else [])
+        
+        # Query for opponent term
+        opponent_response = endpoint.find_neighbors(
+            queries=[opponent_embedding],
+            deployed_index_id=DEPLOYED_INDEX_ID,
+            num_neighbors=NUM_NEIGHBORS,
+        )
+        all_neighbors.extend(opponent_response[0] if opponent_response else [])
 
-    # Collect unique examples from the neighbors
-    seen_examples = set()
-    few_shot_examples = []
-    for neighbor_list in response:
-        for neighbor in neighbor_list:
+        # Collect unique examples from the neighbors
+        seen_examples = set()
+        few_shot_examples = []
+        
+        for neighbor in all_neighbors:
             neighbor_term = neighbor.id
-            # Since we're using Vertex AI Vector Search, we can directly use the neighbor information
-            # In a more complete implementation, you might want to fetch additional details about the examples
-            # from a database or another source, but for now we'll just use the neighbor term
             if neighbor_term not in seen_examples:
                 few_shot_examples.append(
                     f"- Similar term from database: '{neighbor_term}' (Distance: {neighbor.distance:.4f})"
                 )
                 seen_examples.add(neighbor_term)
-    
-    if not few_shot_examples:
-        logger.warning("No relevant examples found in the database.")
-        return "No relevant examples found in the database."
+        
+        if not few_shot_examples:
+            logger.warning("No relevant examples found in the database.")
+            return "No relevant examples found in the database."
 
-    logger.info(f"Retrieved {len(few_shot_examples)} RAG examples:\n" + "\n".join(few_shot_examples))
-    return "\n".join(few_shot_examples)
+        logger.info(f"Retrieved {len(few_shot_examples)} RAG examples:\n" + "\n".join(few_shot_examples))
+        return "\n".join(few_shot_examples)
+        
+    except Exception as e:
+        logger.error(f"Error in Vector Search: {e}")
+        # Fallback to a generic message if Vector Search fails
+        return f"Unable to retrieve similar examples due to search error: {str(e)}"
 
 
 def assess_gs_similarity(request: GsSimilarityRequest) -> tuple[GsSimilarityOutput, str, str]:

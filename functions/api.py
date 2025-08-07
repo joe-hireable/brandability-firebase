@@ -17,7 +17,7 @@ from models import GsSimilarityRequest
 log = logging.getLogger(__name__)
 
 
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["*"]))
 def calculate_visual_similarity(req: https_fn.Request) -> https_fn.Response:
     """
     HTTP function to calculate visual similarity between two marks.
@@ -35,7 +35,7 @@ def calculate_visual_similarity(req: https_fn.Request) -> https_fn.Response:
     return jsonify({"score": score, "degree": degree})
 
 
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["*"]))
 def calculate_aural_similarity(req: https_fn.Request) -> https_fn.Response:
     """
     HTTP function to calculate aural similarity between two marks.
@@ -53,7 +53,7 @@ def calculate_aural_similarity(req: https_fn.Request) -> https_fn.Response:
     return jsonify({"score": score, "degree": degree})
 
 
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["*"]))
 def calculate_conceptual_similarity(req: https_fn.Request) -> https_fn.Response:
     """
     HTTP function to calculate conceptual similarity between two marks.
@@ -71,7 +71,7 @@ def calculate_conceptual_similarity(req: https_fn.Request) -> https_fn.Response:
     return jsonify({"score": score, "degree": degree, "reasoning": reasoning})
 
 
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
+@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["*"]))
 def calculate_gs_similarity(req: https_fn.Request) -> https_fn.Response:
     """
     HTTP function to assess goods and services similarity.
