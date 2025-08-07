@@ -1,46 +1,42 @@
 """
 Cloud Functions for Firebase Entry Point.
 
-This module initializes the Firebase Admin SDK and registers the cloud functions
-that trigger the case ingestion pipeline.
+This module initializes the Firebase Admin SDK and registers all the cloud functions
+by importing them from their respective modules.
 """
 import logging
-import os
 
 from firebase_admin import initialize_app
-from firebase_functions import options, storage_fn, https_fn
+import os
+
+from firebase_functions import options, storage_fn
 from firebase_functions.storage_fn import CloudEvent, StorageObjectData
 
-# Local application imports
 from case_in import case_in
-from case_prediction import (
-    mark_aural_similarity,
-    mark_conceptual_similarity,
-    mark_visual_similarity,
-    gs_similarity,
-)
-from models import GsSimilarityRequest
 
 # --- Firebase and Global Configuration ---
 
-# Set global options for all functions, e.g., region, memory, etc.
-# This is to ensure the function runs in the correct region.
+# Set global options for all functions, e.g., region.
 options.set_global_options(region="europe-west2")
 
 # Initialize Firebase Admin SDK.
-# This is required to interact with Firebase services like Firestore and Storage.
 initialize_app()
 
-# Configure logging
+# Configure logging.
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-# Environment variable for the target storage bucket
-PDF_BUCKET = os.getenv('STORAGE_BUCKET')
+PDF_BUCKET = os.getenv("STORAGE_BUCKET")
 
 
-@storage_fn.on_object_finalized()
-def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
+# --- Register Functions ---
+
+# Import the modules to register the functions.
+from api import *
+
+
+@storage_fn.on_object_finalized(bucket=PDF_BUCKET, region="europe-west2")
+def process_uploaded_case_file(event: CloudEvent[StorageObjectData]) -> None:
     """
     Triggers the case ingestion pipeline when a new PDF is uploaded to the
     specified Cloud Storage bucket.
@@ -60,7 +56,7 @@ def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
         log.error("No file name found in the event data. Aborting.")
         return
 
-    if not file_name.lower().endswith('.pdf'):
+    if not file_name.lower().endswith(".pdf"):
         log.info(f"File '{file_name}' is not a PDF. Skipping processing.")
         return
 
@@ -78,86 +74,10 @@ def on_pdf_upload(event: CloudEvent[StorageObjectData]) -> None:
         log.critical(
             f"The case ingestion pipeline failed catastrophically for file '{file_name}'. "
             f"Error: {e}",
-            exc_info=True
+            exc_info=True,
         )
         # Depending on the requirements, you might want to:
         # 1. Move the file to an 'error' folder within the bucket.
         # 2. Send a notification (e.g., via Cloud Tasks, Pub/Sub, or email).
         # 3. Re-raise the exception to mark the function execution as a failure.
         raise
-    
-    
-from flask import jsonify
-
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
-def calculate_visual_similarity(req: https_fn.Request) -> https_fn.Response:
-    """
-    HTTP function to calculate visual similarity between two marks.
-    """
-    applicant_mark = req.get_json().get("applicant_mark")
-    opponent_mark = req.get_json().get("opponent_mark")
-
-    if not applicant_mark or not opponent_mark:
-        return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
-
-    score, degree = mark_visual_similarity.calculate_visual_similarity(
-        applicant_mark, opponent_mark
-    )
-
-    return jsonify({"score": score, "degree": degree})
-
-
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
-def calculate_aural_similarity(req: https_fn.Request) -> https_fn.Response:
-    """
-    HTTP function to calculate aural similarity between two marks.
-    """
-    applicant_mark = req.get_json().get("applicant_mark")
-    opponent_mark = req.get_json().get("opponent_mark")
-
-    if not applicant_mark or not opponent_mark:
-        return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
-
-    score, degree = mark_aural_similarity.calculate_aural_similarity(
-        applicant_mark, opponent_mark
-    )
-
-    return jsonify({"score": score, "degree": degree})
-
-
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
-def calculate_conceptual_similarity(req: https_fn.Request) -> https_fn.Response:
-    """
-    HTTP function to calculate conceptual similarity between two marks.
-    """
-    applicant_mark = req.get_json().get("applicant_mark")
-    opponent_mark = req.get_json().get("opponent_mark")
-
-    if not applicant_mark or not opponent_mark:
-        return https_fn.Response("Missing applicant_mark or opponent_mark", status=400)
-
-    score, degree, reasoning = mark_conceptual_similarity.calculate_conceptual_similarity(
-        applicant_mark, opponent_mark
-    )
-
-    return jsonify({"score": score, "degree": degree, "reasoning": reasoning})
-
-
-@https_fn.on_request(cors=options.CorsOptions(cors_origins="*", cors_methods=["get", "post"]))
-def calculate_gs_similarity(req: https_fn.Request) -> https_fn.Response:
-    """
-    HTTP function to assess goods and services similarity.
-    """
-    try:
-        data = req.get_json()
-        gs_request = GsSimilarityRequest(**data)
-    except Exception as e:
-        log.error(f"Error parsing request body: {e}", exc_info=True)
-        return https_fn.Response(f"Invalid request body: {e}", status=400)
-
-    try:
-        result, _, _ = gs_similarity.assess_gs_similarity(gs_request)
-        return jsonify(result.model_dump())
-    except Exception as e:
-        log.error(f"Error assessing G&S similarity: {e}", exc_info=True)
-        return https_fn.Response("Internal server error", status=500)

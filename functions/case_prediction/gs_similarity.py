@@ -40,27 +40,9 @@ except KeyError:
     )
 
 # --- Constants ---
-PROCESSED_DATA_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "data", "processed_similarity_data.jsonl"
-)
 EMBEDDING_MODEL_NAME = "embedding-001"
 NUM_NEIGHBORS = 5  # Number of similar examples to retrieve
 
-# --- Data Loading ---
-def load_similarity_data(path: str) -> Dict[str, List[Dict[str, Any]]]:
-    """Loads the processed similarity data and creates a lookup table."""
-    lookup_table = {}
-    with open(path, "r") as f:
-        for line in f:
-            record = json.loads(line)
-            # Add record to lookup table for both terms
-            for term in [record["term_1"], record["term_2"]]:
-                if term not in lookup_table:
-                    lookup_table[term] = []
-                lookup_table[term].append(record)
-    return lookup_table
-
-similarity_lookup_table = load_similarity_data(PROCESSED_DATA_PATH)
 
 # --- AI and Vector Search Functions ---
 
@@ -102,16 +84,14 @@ def find_similar_examples(
     for neighbor_list in response:
         for neighbor in neighbor_list:
             neighbor_term = neighbor.id
-            if neighbor_term in similarity_lookup_table:
-                for example in similarity_lookup_table[neighbor_term]:
-                    example_key = tuple(sorted((example["term_1"], example["term_2"])))
-                    if example_key not in seen_examples:
-                        few_shot_examples.append(
-                            f"- Term 1: '{example['term_1']}' (Class {example['class_1']}), "
-                            f"Term 2: '{example['term_2']}' (Class {example['class_2']}), "
-                            f"Similarity: {example['similarity_degree']}"
-                        )
-                        seen_examples.add(example_key)
+            # Since we're using Vertex AI Vector Search, we can directly use the neighbor information
+            # In a more complete implementation, you might want to fetch additional details about the examples
+            # from a database or another source, but for now we'll just use the neighbor term
+            if neighbor_term not in seen_examples:
+                few_shot_examples.append(
+                    f"- Similar term from database: '{neighbor_term}' (Distance: {neighbor.distance:.4f})"
+                )
+                seen_examples.add(neighbor_term)
     
     if not few_shot_examples:
         logger.warning("No relevant examples found in the database.")

@@ -75,3 +75,5 @@ data/2025_08_06_Results_CFSimilarity.xls
 .gitignore
 data/term_embeddings.json
 
+functions/.env.test
+.env.yaml
